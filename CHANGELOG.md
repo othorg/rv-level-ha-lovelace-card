@@ -9,6 +9,16 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.1.6] - 2026-03-10
+
+### Fixed
+- Center level dot now uses circular vector projection (`projectToUnitCircle`) so movement always stays inside a circular range.
+- Dot position now uses pixel-based circle radius (instead of plain percent offsets), keeping 360° bubble behavior stable on tall card aspect ratios.
+- Dot width/height are set explicitly per render to guarantee a true circle (no oval distortion).
+
+### Tests
+- Added regression test for unit-circle projection behavior.
+
 ## [0.1.5] - 2026-03-10
 
 ### Fixed

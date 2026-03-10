@@ -178,6 +178,16 @@ test("clampTiltForLeveling caps extreme angles for stable rendering", () => {
   assert.equal(runtime.api.clampTiltForLeveling(-120), -30);
 });
 
+test("projectToUnitCircle keeps vectors inside unit circle", () => {
+  const runtime = loadRuntime();
+  const inside = runtime.api.projectToUnitCircle(0.6, 0.2);
+  assert.equal(inside.x, 0.6);
+  assert.equal(inside.y, 0.2);
+
+  const outside = runtime.api.projectToUnitCircle(1.4, 1.4);
+  assert.ok(Math.hypot(outside.x, outside.y) <= 1.0000001);
+});
+
 test("resolvePitchRoll respects swap and inversion flags", () => {
   const runtime = loadRuntime();
   const hass = {

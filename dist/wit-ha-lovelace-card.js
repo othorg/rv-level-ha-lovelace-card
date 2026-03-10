@@ -1,6 +1,6 @@
 const CARD_TYPE = "wit-ha-lovelace-card";
 const CARD_NAME = "WIT RV Level Lovelace Card";
-const CARD_VERSION = "0.1.5";
+const CARD_VERSION = "0.1.6";
 
 const DEFAULT_GEOMETRY = {
   wheelbase_mm: 2000,
@@ -118,6 +118,10 @@ const TEXT_SIZE_MODE_FACTORS = {
 };
 
 const MAX_LEVELING_TILT_DEG = 30;
+const DOT_CENTER_X_RATIO = 0.5;
+const DOT_CENTER_Y_RATIO = 0.49;
+const DOT_TRACK_RADIUS_RATIO = 0.095;
+const DOT_SIZE_RATIO = 0.072;
 
 function detectScriptBasePath() {
   if (typeof document === "undefined") return "";
@@ -311,6 +315,16 @@ function clampTiltForLeveling(value) {
   return clampNumber(value, -MAX_LEVELING_TILT_DEG, MAX_LEVELING_TILT_DEG, 0);
 }
 
+function projectToUnitCircle(x, y) {
+  const nx = Number.isFinite(x) ? x : 0;
+  const ny = Number.isFinite(y) ? y : 0;
+  const mag = Math.hypot(nx, ny);
+  if (mag <= 1 || mag === 0) {
+    return { x: nx, y: ny };
+  }
+  return { x: nx / mag, y: ny / mag };
+}
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -463,8 +477,9 @@ class WitHaLovelaceCard extends HTMLElement {
     const maxTilt = this._config.display.max_tilt_deg || DEFAULT_DISPLAY.max_tilt_deg;
 
     const clamp = (v) => Math.max(-1, Math.min(1, v));
-    const dotNx = pr.valid ? clamp((-pr.roll) / maxTilt) : 0;
-    const dotNy = pr.valid ? clamp((-pr.pitch) / maxTilt) : 0;
+    const rawDotNx = pr.valid ? clamp((-pr.roll) / maxTilt) : 0;
+    const rawDotNy = pr.valid ? clamp((-pr.pitch) / maxTilt) : 0;
+    const dot = projectToUnitCircle(rawDotNx, rawDotNy);
 
     const tol = this._config.display.level_tolerance_cm;
     const corners = {
@@ -490,8 +505,8 @@ class WitHaLovelaceCard extends HTMLElement {
       valid: pr.valid,
       pitch: pr.pitch,
       roll: pr.roll,
-      dotNx,
-      dotNy,
+      dotNx: dot.x,
+      dotNy: dot.y,
       corners,
       tempText: this._formatRawEntity(this._config.entities.temperature, this._t("not_available")),
       battText: this._formatRawEntity(this._config.entities.battery_soc, this._t("not_available")),
@@ -743,10 +758,14 @@ class WitHaLovelaceCard extends HTMLElement {
     this._nodes.pitch.style.maxWidth = `${pitchMaxWidthPx}px`;
     this._nodes.roll.style.maxWidth = `${rollMaxWidthPx}px`;
 
-    const dotX = 50 + model.dotNx * 12;
-    const dotY = 49 + model.dotNy * 12;
-    this._nodes.dot.style.left = `${dotX}%`;
-    this._nodes.dot.style.top = `${dotY}%`;
+    const dotTrackRadiusPx = clampInt(Math.min(width, height) * DOT_TRACK_RADIUS_RATIO, 16, Math.min(width, height) * 0.15);
+    const dotSizePx = clampInt(Math.min(width, height) * DOT_SIZE_RATIO, 14, Math.min(width, height) * 0.12);
+    const dotCenterX = width * DOT_CENTER_X_RATIO + model.dotNx * dotTrackRadiusPx;
+    const dotCenterY = height * DOT_CENTER_Y_RATIO + model.dotNy * dotTrackRadiusPx;
+    this._nodes.dot.style.width = `${dotSizePx}px`;
+    this._nodes.dot.style.height = `${dotSizePx}px`;
+    this._nodes.dot.style.left = `${dotCenterX}px`;
+    this._nodes.dot.style.top = `${dotCenterY}px`;
 
     const updateCorner = (markerNode, valueNode, corner) => {
       markerNode.className = "marker";
@@ -1008,6 +1027,7 @@ window.__WIT_CARD_TEST_API = {
   normalizeConfig,
   computeLeveling,
   clampTiltForLeveling,
+  projectToUnitCircle,
   resolvePitchRoll,
   readNumericState,
   clampNumber,
