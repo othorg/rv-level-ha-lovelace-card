@@ -24,6 +24,7 @@ Planned next step: dedicated Home Assistant integration for WT901WIFI/WIT data s
 - Configurable display behavior:
   - max tilt range for center dot
   - level tolerance
+  - text size mode (`auto`, `small`, `medium`, `large`)
   - optional temperature/battery/corner labels
 - Orientation correction options:
   - swap X/Y
@@ -71,6 +72,7 @@ geometry:
 display:
   max_tilt_deg: 5
   level_tolerance_cm: 0.1
+  text_size_mode: auto
 orientation:
   swap_axes: false
   invert_pitch: false

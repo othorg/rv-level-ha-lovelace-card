@@ -1,6 +1,6 @@
 const CARD_TYPE = "wit-ha-lovelace-card";
 const CARD_NAME = "WIT RV Level Lovelace Card";
-const CARD_VERSION = "0.1.3";
+const CARD_VERSION = "0.1.4";
 
 const DEFAULT_GEOMETRY = {
   wheelbase_mm: 2000,
@@ -11,6 +11,7 @@ const DEFAULT_GEOMETRY = {
 const DEFAULT_DISPLAY = {
   max_tilt_deg: 5,
   level_tolerance_cm: 0.1,
+  text_size_mode: "auto",
   show_temperature: true,
   show_battery: true,
   show_corner_values: true,
@@ -48,6 +49,11 @@ const I18N = {
     display: "Anzeige",
     max_tilt_deg: "Max Tilt fuer Punkt (Grad)",
     level_tolerance_cm: "Nivellier-Toleranz (cm)",
+    text_size_mode: "Schriftgroesse",
+    text_size_auto: "Auto",
+    text_size_small: "Klein",
+    text_size_medium: "Mittel",
+    text_size_large: "Gross",
     show_temperature: "Temperatur anzeigen",
     show_battery: "Batterie anzeigen",
     show_corner_values: "Eckwerte anzeigen",
@@ -77,6 +83,11 @@ const I18N = {
     display: "Display",
     max_tilt_deg: "Max tilt for dot (deg)",
     level_tolerance_cm: "Level tolerance (cm)",
+    text_size_mode: "Text size",
+    text_size_auto: "Auto",
+    text_size_small: "Small",
+    text_size_medium: "Medium",
+    text_size_large: "Large",
     show_temperature: "Show temperature",
     show_battery: "Show battery",
     show_corner_values: "Show corner values",
@@ -97,6 +108,14 @@ const NUMBER_FIELDS = new Set([
   "max_tilt_deg",
   "level_tolerance_cm",
 ]);
+
+const TEXT_SIZE_MODES = new Set(["auto", "small", "medium", "large"]);
+const TEXT_SIZE_MODE_FACTORS = {
+  auto: 1.0,
+  small: 0.88,
+  medium: 1.0,
+  large: 1.14,
+};
 
 function detectScriptBasePath() {
   if (typeof document === "undefined") return "";
@@ -162,6 +181,12 @@ function clampNumber(value, min, max, fallback) {
   return Math.max(min, Math.min(max, num));
 }
 
+function clampInt(value, min, max) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return min;
+  return Math.round(Math.max(min, Math.min(max, num)));
+}
+
 function normalizeConfig(config) {
   const raw = config || {};
   const normalized = {
@@ -192,6 +217,7 @@ function normalizeConfig(config) {
 
   normalized.display.max_tilt_deg = clampNumber(normalized.display.max_tilt_deg, 1, 30, DEFAULT_DISPLAY.max_tilt_deg);
   normalized.display.level_tolerance_cm = clampNumber(normalized.display.level_tolerance_cm, 0, 20, DEFAULT_DISPLAY.level_tolerance_cm);
+  normalized.display.text_size_mode = normalizeTextSizeMode(normalized.display.text_size_mode);
   normalized.display.show_temperature = Boolean(normalized.display.show_temperature);
   normalized.display.show_battery = Boolean(normalized.display.show_battery);
   normalized.display.show_corner_values = Boolean(normalized.display.show_corner_values);
@@ -201,6 +227,12 @@ function normalizeConfig(config) {
   normalized.orientation.invert_roll = Boolean(normalized.orientation.invert_roll);
 
   return normalized;
+}
+
+function normalizeTextSizeMode(value) {
+  const mode = String(value || "").toLowerCase();
+  if (TEXT_SIZE_MODES.has(mode)) return mode;
+  return DEFAULT_DISPLAY.text_size_mode;
 }
 
 function isSupportedCardType(type) {
@@ -458,6 +490,11 @@ class WitHaLovelaceCard extends HTMLElement {
     };
   }
 
+  _textModeFactor() {
+    const mode = normalizeTextSizeMode(this._config?.display?.text_size_mode);
+    return TEXT_SIZE_MODE_FACTORS[mode] || TEXT_SIZE_MODE_FACTORS.auto;
+  }
+
   _onWrapperClick(ev) {
     const clickable = ev.target?.closest?.("[data-entity-key]");
     if (!clickable) return;
@@ -502,10 +539,12 @@ class WitHaLovelaceCard extends HTMLElement {
           font-family: Arial, sans-serif;
           z-index: 2;
           white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         .clickable { cursor: pointer; }
-        .temp { top: 2%; left: 7%; font-size: 14px; }
-        .batt { top: 2%; right: 7%; font-size: 14px; }
+        .temp { top: 2%; left: 7%; font-size: 14px; text-align: left; }
+        .batt { top: 2%; right: 7%; font-size: 14px; text-align: right; }
         .title {
           top: 8%;
           left: 50%;
@@ -524,6 +563,7 @@ class WitHaLovelaceCard extends HTMLElement {
           transform: translateX(-50%);
           font-size: 26px;
           font-weight: 500;
+          text-align: center;
         }
         .roll {
           right: 5%;
@@ -582,6 +622,9 @@ class WitHaLovelaceCard extends HTMLElement {
           text-shadow: 0 0 4px rgba(255,255,255,0.92);
           z-index: 2;
           white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          text-align: center;
         }
         .cv-fl { top: 31%; left: 18%; transform: translate(-50%, -50%); }
         .cv-fr { top: 31%; right: 18%; transform: translate(50%, -50%); }
@@ -644,7 +687,21 @@ class WitHaLovelaceCard extends HTMLElement {
     const title = this._config.title || this._t("default_title");
     const model = this._buildModel();
     const width = this._nodes.wrapper?.clientWidth || this._nodes.wrapper?.offsetWidth || 550;
-    const scale = Math.max(0.56, Math.min(1.0, width / 550));
+    const height = this._nodes.wrapper?.clientHeight || Math.round((width * 1093) / 550);
+    const autoScale = clampNumber(width / 550, 0.56, 1.02, 1);
+    const modeScale = this._textModeFactor();
+    const scale = clampNumber(autoScale * modeScale, 0.52, 1.25, 1);
+
+    const titlePx = clampInt(18 * scale, 12, Math.min(width * 0.062, height * 0.032));
+    const infoPx = clampInt(14 * scale, 10, Math.min(width * 0.05, height * 0.025));
+    const anglePx = clampInt(26 * scale, 15, Math.min(width * 0.066, height * 0.034));
+    const cornerPx = clampInt(16 * scale, 10, Math.min(width * 0.034, height * 0.018));
+
+    const titleMaxWidthPx = clampInt(width * 0.78, 160, width * 0.92);
+    const topMaxWidthPx = clampInt(width * 0.32, 80, width * 0.38);
+    const pitchMaxWidthPx = clampInt(width * 0.38, 110, width * 0.5);
+    const rollMaxWidthPx = clampInt(width * 0.3, 90, width * 0.42);
+    const cornerMaxWidthPx = clampInt(width * 0.24, 72, width * 0.3);
 
     const imageUrl = this._resolveImageUrl();
     if (this._nodes.img?.dataset.src !== imageUrl) {
@@ -654,21 +711,26 @@ class WitHaLovelaceCard extends HTMLElement {
     this._nodes.img.alt = this._t("image_alt");
 
     this._nodes.title.textContent = title;
-    this._nodes.title.style.fontSize = `${Math.round(18 * scale)}px`;
+    this._nodes.title.style.fontSize = `${titlePx}px`;
+    this._nodes.title.style.maxWidth = `${titleMaxWidthPx}px`;
 
     this._nodes.temp.hidden = !this._config.display.show_temperature;
     this._nodes.batt.hidden = !this._config.display.show_battery;
     this._nodes.temp.textContent = model.tempText;
     this._nodes.batt.textContent = model.battText;
-    this._nodes.temp.style.fontSize = `${Math.round(14 * scale)}px`;
-    this._nodes.batt.style.fontSize = `${Math.round(14 * scale)}px`;
+    this._nodes.temp.style.fontSize = `${infoPx}px`;
+    this._nodes.batt.style.fontSize = `${infoPx}px`;
+    this._nodes.temp.style.maxWidth = `${topMaxWidthPx}px`;
+    this._nodes.batt.style.maxWidth = `${topMaxWidthPx}px`;
 
     const pitchText = model.valid ? `${fmtOne(model.pitch)} ${this._t("unit_deg")}` : `${this._t("not_available")} ${this._t("unit_deg")}`;
     const rollText = model.valid ? `${fmtOne(model.roll)} ${this._t("unit_deg")}` : `${this._t("not_available")} ${this._t("unit_deg")}`;
     this._nodes.pitch.textContent = pitchText;
     this._nodes.roll.textContent = rollText;
-    this._nodes.pitch.style.fontSize = `${Math.round(26 * scale)}px`;
-    this._nodes.roll.style.fontSize = `${Math.round(26 * scale)}px`;
+    this._nodes.pitch.style.fontSize = `${anglePx}px`;
+    this._nodes.roll.style.fontSize = `${anglePx}px`;
+    this._nodes.pitch.style.maxWidth = `${pitchMaxWidthPx}px`;
+    this._nodes.roll.style.maxWidth = `${rollMaxWidthPx}px`;
 
     const dotX = 50 + model.dotNx * 12;
     const dotY = 49 + model.dotNy * 12;
@@ -682,7 +744,8 @@ class WitHaLovelaceCard extends HTMLElement {
         valueNode.hidden = false;
         const value = corner.raise === null ? 0 : corner.raise;
         valueNode.textContent = `${fmtOne(value)} ${this._t("unit_cm")}`;
-        valueNode.style.fontSize = `${Math.round(16 * scale)}px`;
+        valueNode.style.fontSize = `${cornerPx}px`;
+        valueNode.style.maxWidth = `${cornerMaxWidthPx}px`;
       } else {
         valueNode.hidden = true;
       }
@@ -778,7 +841,7 @@ class WitHaLovelaceCardEditor extends HTMLElement {
         .row { display: grid; gap: 6px; margin-bottom: 8px; }
         .row.inline { grid-template-columns: 1fr 1fr; gap: 10px; }
         label { font-size: 13px; color: #3a3a3a; }
-        input[type="text"], input[type="number"] {
+        input[type="text"], input[type="number"], select {
           width: 100%;
           box-sizing: border-box;
           border: 1px solid #c9c9c9;
@@ -818,6 +881,15 @@ class WitHaLovelaceCardEditor extends HTMLElement {
           <div class="row inline">
             <div><label>${escapeHtml(this._t("max_tilt_deg"))}</label><input id="max_tilt_deg" data-group="display" type="number" step="0.1" value="${escapeHtml(c.display.max_tilt_deg)}" /></div>
             <div><label>${escapeHtml(this._t("level_tolerance_cm"))}</label><input id="level_tolerance_cm" data-group="display" type="number" step="0.1" value="${escapeHtml(c.display.level_tolerance_cm)}" /></div>
+          </div>
+          <div class="row">
+            <label>${escapeHtml(this._t("text_size_mode"))}</label>
+            <select id="text_size_mode" data-group="display">
+              <option value="auto" ${c.display.text_size_mode === "auto" ? "selected" : ""}>${escapeHtml(this._t("text_size_auto"))}</option>
+              <option value="small" ${c.display.text_size_mode === "small" ? "selected" : ""}>${escapeHtml(this._t("text_size_small"))}</option>
+              <option value="medium" ${c.display.text_size_mode === "medium" ? "selected" : ""}>${escapeHtml(this._t("text_size_medium"))}</option>
+              <option value="large" ${c.display.text_size_mode === "large" ? "selected" : ""}>${escapeHtml(this._t("text_size_large"))}</option>
+            </select>
           </div>
           <label class="check"><input id="show_temperature" data-group="display" type="checkbox" ${c.display.show_temperature ? "checked" : ""} /> ${escapeHtml(this._t("show_temperature"))}</label>
           <label class="check"><input id="show_battery" data-group="display" type="checkbox" ${c.display.show_battery ? "checked" : ""} /> ${escapeHtml(this._t("show_battery"))}</label>

@@ -9,6 +9,19 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.1.4] - 2026-03-10
+
+### Added
+- New display config option `text_size_mode` with values: `auto`, `small`, `medium`, `large`.
+- Card editor selector for text size mode in the Display section.
+
+### Changed
+- Viewport-aware dynamic text sizing with hard safety caps to keep labels away from core layout elements.
+- Added width constraints and ellipsis handling for top labels, title, angle values, and corner value labels.
+
+### Tests
+- Added normalization tests for `display.text_size_mode` (valid and invalid values).
+
 ## [0.1.3] - 2026-03-10
 
 ### Fixed

@@ -122,7 +122,24 @@ test("normalizeConfig applies defaults", () => {
   assert.equal(cfg.entities.pitch, "sensor.easylevelrv_neigung_x");
   assert.equal(cfg.geometry.wheelbase_mm, 2000);
   assert.equal(cfg.display.max_tilt_deg, 5);
+  assert.equal(cfg.display.text_size_mode, "auto");
   assert.equal(cfg.orientation.swap_axes, false);
+});
+
+test("normalizeConfig keeps valid text_size_mode and falls back for invalid values", () => {
+  const runtime = loadRuntime();
+
+  const validCfg = runtime.api.normalizeConfig({
+    type: "custom:wit-ha-lovelace-card",
+    display: { text_size_mode: "large" },
+  });
+  assert.equal(validCfg.display.text_size_mode, "large");
+
+  const invalidCfg = runtime.api.normalizeConfig({
+    type: "custom:wit-ha-lovelace-card",
+    display: { text_size_mode: "huge" },
+  });
+  assert.equal(invalidCfg.display.text_size_mode, "auto");
 });
 
 test("computeLeveling returns zero raises on flat surface", () => {
