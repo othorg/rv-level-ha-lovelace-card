@@ -9,6 +9,13 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.1.7] - 2026-03-10
+
+### Fixed
+- Reworked center bubble rendering into a dedicated square `bubble-zone` with explicit circular track.
+- Center red dot is now rendered inside the bubble-zone with pixel-based square sizing and circle clipping.
+- Dot movement is constrained to the bubble track radius and cannot leave the green circle.
+
 ## [0.1.6] - 2026-03-10
 
 ### Fixed

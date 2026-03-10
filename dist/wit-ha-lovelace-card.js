@@ -1,6 +1,6 @@
 const CARD_TYPE = "wit-ha-lovelace-card";
 const CARD_NAME = "WIT RV Level Lovelace Card";
-const CARD_VERSION = "0.1.6";
+const CARD_VERSION = "0.1.7";
 
 const DEFAULT_GEOMETRY = {
   wheelbase_mm: 2000,
@@ -120,8 +120,8 @@ const TEXT_SIZE_MODE_FACTORS = {
 const MAX_LEVELING_TILT_DEG = 30;
 const DOT_CENTER_X_RATIO = 0.5;
 const DOT_CENTER_Y_RATIO = 0.49;
-const DOT_TRACK_RADIUS_RATIO = 0.095;
-const DOT_SIZE_RATIO = 0.072;
+const DOT_ZONE_SIZE_RATIO = 0.235;
+const DOT_SIZE_RATIO = 0.078;
 
 function detectScriptBasePath() {
   if (typeof document === "undefined") return "";
@@ -598,17 +598,37 @@ class WitHaLovelaceCard extends HTMLElement {
         }
         .dot {
           position: absolute;
-          width: 8.4%;
-          aspect-ratio: 1 / 1;
+          width: 44px;
+          height: 44px;
           border-radius: 50%;
           background: #ff1b1b;
           border: 2px solid #2f2828;
           box-shadow: 0 0 8px rgba(0,0,0,0.5);
           left: 50%;
-          top: 49%;
+          top: 50%;
           transform: translate(-50%, -50%);
           z-index: 3;
           pointer-events: none;
+          box-sizing: border-box;
+          clip-path: circle(50% at 50% 50%);
+        }
+        .bubble-zone {
+          position: absolute;
+          left: 50%;
+          top: 49%;
+          width: 120px;
+          height: 120px;
+          transform: translate(-50%, -50%);
+          z-index: 2;
+          pointer-events: none;
+        }
+        .bubble-track {
+          position: absolute;
+          inset: 0;
+          border-radius: 50%;
+          border: 2px solid rgba(0, 200, 83, 0.55);
+          background: rgba(0, 200, 83, 0.08);
+          box-sizing: border-box;
         }
         .corner {
           position: absolute;
@@ -662,7 +682,10 @@ class WitHaLovelaceCard extends HTMLElement {
           <div class="overlay title"></div>
           <div class="overlay pitch clickable" data-entity-key="pitch"></div>
           <div class="overlay roll clickable" data-entity-key="roll"></div>
-          <div class="dot"></div>
+          <div class="bubble-zone">
+            <div class="bubble-track"></div>
+            <div class="dot"></div>
+          </div>
 
           <div class="corner fl"><div class="marker"></div></div>
           <div class="corner fr"><div class="marker"></div></div>
@@ -686,6 +709,7 @@ class WitHaLovelaceCard extends HTMLElement {
       title: this.shadowRoot.querySelector(".title"),
       pitch: this.shadowRoot.querySelector(".pitch"),
       roll: this.shadowRoot.querySelector(".roll"),
+      bubbleZone: this.shadowRoot.querySelector(".bubble-zone"),
       dot: this.shadowRoot.querySelector(".dot"),
       flm: this.shadowRoot.querySelector(".corner.fl .marker"),
       frm: this.shadowRoot.querySelector(".corner.fr .marker"),
@@ -758,10 +782,18 @@ class WitHaLovelaceCard extends HTMLElement {
     this._nodes.pitch.style.maxWidth = `${pitchMaxWidthPx}px`;
     this._nodes.roll.style.maxWidth = `${rollMaxWidthPx}px`;
 
-    const dotTrackRadiusPx = clampInt(Math.min(width, height) * DOT_TRACK_RADIUS_RATIO, 16, Math.min(width, height) * 0.15);
-    const dotSizePx = clampInt(Math.min(width, height) * DOT_SIZE_RATIO, 14, Math.min(width, height) * 0.12);
-    const dotCenterX = width * DOT_CENTER_X_RATIO + model.dotNx * dotTrackRadiusPx;
-    const dotCenterY = height * DOT_CENTER_Y_RATIO + model.dotNy * dotTrackRadiusPx;
+    const bubbleZoneSizePx = clampInt(Math.min(width, height) * DOT_ZONE_SIZE_RATIO, 96, Math.min(width, height) * 0.34);
+    const dotSizePx = clampInt(Math.min(width, height) * DOT_SIZE_RATIO, 20, Math.min(width, height) * 0.14);
+    const dotTrackRadiusPx = Math.max(0, Math.round((bubbleZoneSizePx - dotSizePx) / 2));
+    const bubbleLeftPx = width * DOT_CENTER_X_RATIO - bubbleZoneSizePx / 2;
+    const bubbleTopPx = height * DOT_CENTER_Y_RATIO - bubbleZoneSizePx / 2;
+    const dotCenterX = bubbleZoneSizePx / 2 + model.dotNx * dotTrackRadiusPx;
+    const dotCenterY = bubbleZoneSizePx / 2 + model.dotNy * dotTrackRadiusPx;
+    this._nodes.bubbleZone.style.left = `${bubbleLeftPx}px`;
+    this._nodes.bubbleZone.style.top = `${bubbleTopPx}px`;
+    this._nodes.bubbleZone.style.width = `${bubbleZoneSizePx}px`;
+    this._nodes.bubbleZone.style.height = `${bubbleZoneSizePx}px`;
+    this._nodes.bubbleZone.style.transform = "none";
     this._nodes.dot.style.width = `${dotSizePx}px`;
     this._nodes.dot.style.height = `${dotSizePx}px`;
     this._nodes.dot.style.left = `${dotCenterX}px`;
