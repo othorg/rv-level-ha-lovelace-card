@@ -1,6 +1,6 @@
 const CARD_TYPE = "wit-ha-lovelace-card";
 const CARD_NAME = "WIT RV Level Lovelace Card";
-const CARD_VERSION = "0.1.9";
+const CARD_VERSION = "0.1.10";
 
 const DEFAULT_GEOMETRY = {
   wheelbase_mm: 2000,
@@ -120,7 +120,7 @@ const TEXT_SIZE_MODE_FACTORS = {
 const MAX_LEVELING_TILT_DEG = 30;
 const DOT_CENTER_X_RATIO = 0.5;
 const DOT_CENTER_Y_RATIO = 0.495;
-const DOT_ZONE_SIZE_RATIO = 0.21;
+const DOT_BOUNDARY_RADIUS_RATIO = 0.082;
 const DOT_SIZE_RATIO = 0.078;
 
 function detectScriptBasePath() {
@@ -323,6 +323,18 @@ function projectToUnitCircle(x, y) {
     return { x: nx, y: ny };
   }
   return { x: nx / mag, y: ny / mag };
+}
+
+function computeDotGeometry(width) {
+  const dotSizePx = clampInt(width * DOT_SIZE_RATIO, 20, width * 0.14);
+  const boundaryRadiusPx = clampInt(
+    width * DOT_BOUNDARY_RADIUS_RATIO,
+    Math.ceil(dotSizePx / 2) + 4,
+    width * 0.2,
+  );
+  const bubbleZoneSizePx = boundaryRadiusPx * 2;
+  const dotTrackRadiusPx = Math.max(0, boundaryRadiusPx - dotSizePx / 2);
+  return { dotSizePx, boundaryRadiusPx, bubbleZoneSizePx, dotTrackRadiusPx };
 }
 
 function escapeHtml(value) {
@@ -774,9 +786,10 @@ class WitHaLovelaceCard extends HTMLElement {
     this._nodes.pitch.style.maxWidth = `${pitchMaxWidthPx}px`;
     this._nodes.roll.style.maxWidth = `${rollMaxWidthPx}px`;
 
-    const bubbleZoneSizePx = clampInt(Math.min(width, height) * DOT_ZONE_SIZE_RATIO, 96, Math.min(width, height) * 0.34);
-    const dotSizePx = clampInt(Math.min(width, height) * DOT_SIZE_RATIO, 20, Math.min(width, height) * 0.14);
-    const dotTrackRadiusPx = Math.max(0, Math.round((bubbleZoneSizePx - dotSizePx) / 2));
+    const dotGeometry = computeDotGeometry(width);
+    const dotSizePx = dotGeometry.dotSizePx;
+    const bubbleZoneSizePx = dotGeometry.bubbleZoneSizePx;
+    const dotTrackRadiusPx = dotGeometry.dotTrackRadiusPx;
     const bubbleLeftPx = width * DOT_CENTER_X_RATIO - bubbleZoneSizePx / 2;
     const bubbleTopPx = height * DOT_CENTER_Y_RATIO - bubbleZoneSizePx / 2;
     const dotCenterX = bubbleZoneSizePx / 2 + model.dotNx * dotTrackRadiusPx;
@@ -1052,6 +1065,7 @@ window.__WIT_CARD_TEST_API = {
   computeLeveling,
   clampTiltForLeveling,
   projectToUnitCircle,
+  computeDotGeometry,
   resolvePitchRoll,
   readNumericState,
   clampNumber,

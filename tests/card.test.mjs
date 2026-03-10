@@ -188,6 +188,13 @@ test("projectToUnitCircle keeps vectors inside unit circle", () => {
   assert.ok(Math.hypot(outside.x, outside.y) <= 1.0000001);
 });
 
+test("computeDotGeometry keeps max dot edge on boundary circle", () => {
+  const runtime = loadRuntime();
+  const geom = runtime.api.computeDotGeometry(550);
+  assert.ok(geom.dotTrackRadiusPx >= 0);
+  assert.equal(geom.boundaryRadiusPx - geom.dotSizePx / 2, geom.dotTrackRadiusPx);
+});
+
 test("resolvePitchRoll respects swap and inversion flags", () => {
   const runtime = loadRuntime();
   const hass = {

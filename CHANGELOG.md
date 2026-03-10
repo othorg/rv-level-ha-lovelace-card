@@ -9,6 +9,15 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.1.10] - 2026-03-10
+
+### Changed
+- Recalibrated center bubble mapping so the red dot's outer edge reaches exactly the light-green center-circle boundary at maximum deflection.
+- Dot radius/track now use explicit boundary geometry (`computeDotGeometry`) to keep image-aligned behavior deterministic across viewport sizes.
+
+### Tests
+- Added regression test for dot geometry edge/boundary relation.
+
 ## [0.1.9] - 2026-03-10
 
 ### Changed
