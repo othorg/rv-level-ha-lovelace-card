@@ -9,6 +9,16 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.1.12] - 2026-03-10
+
+### Added
+- GitHub release automation workflow (`.github/workflows/release.yml`) on `v*` tags.
+
+### Changed
+- Adopted explicit release versioning flow aligned with the Solvis card:
+  - semver tag -> GitHub Release -> HACS update detection.
+- Version bump only; no functional card behavior changes compared to `0.1.11`.
+
 ## [0.1.11] - 2026-03-10
 
 ### Changed

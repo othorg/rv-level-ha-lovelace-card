@@ -87,6 +87,17 @@ Run tests:
 npm test
 ```
 
+## Maintainer Release Flow
+
+To publish updates so HACS can reliably detect new versions:
+
+1. Update version in:
+`package.json` and `dist/wit-ha-lovelace-card.js` (`CARD_VERSION`).
+2. Commit and push to `main`.
+3. Create and push a new semver tag:
+`git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push origin vX.Y.Z`
+4. GitHub Actions creates a GitHub Release automatically from the tag.
+
 ## Assets
 
 - Base image: `assets/rv_top_flair.png`
