@@ -1,6 +1,6 @@
 const CARD_TYPE = "wit-ha-lovelace-card";
 const CARD_NAME = "RV Level Lovelace Card";
-const CARD_VERSION = "0.2.4";
+const CARD_VERSION = "0.2.5";
 
 const DEFAULT_GEOMETRY = {
   wheelbase_mm: 2000,
@@ -18,6 +18,7 @@ const DEFAULT_DISPLAY = {
   text_size_mode: "auto",
   show_temperature: true,
   show_battery: true,
+  show_angle_panel: true,
   show_corner_values: true,
   show_compass_ring: true,
   round_overlay_scale: 1,
@@ -110,6 +111,7 @@ const I18N = {
     text_size_large: "Gross",
     show_temperature: "Temperatur anzeigen",
     show_battery: "Batterie anzeigen",
+    show_angle_panel: "AngleX/Y/Z anzeigen",
     show_corner_values: "Eckwerte anzeigen",
     show_compass_ring: "Kompassring anzeigen",
     round_overlay_scale: "Kompass-Overlay Skalierung",
@@ -179,6 +181,7 @@ const I18N = {
     text_size_large: "Large",
     show_temperature: "Show temperature",
     show_battery: "Show battery",
+    show_angle_panel: "Show AngleX/Y/Z",
     show_corner_values: "Show corner values",
     show_compass_ring: "Show compass ring",
     round_overlay_scale: "Compass overlay scale",
@@ -377,6 +380,7 @@ function normalizeConfig(config) {
   normalized.display.text_size_mode = normalizeTextSizeMode(normalized.display.text_size_mode);
   normalized.display.show_temperature = Boolean(normalized.display.show_temperature);
   normalized.display.show_battery = Boolean(normalized.display.show_battery);
+  normalized.display.show_angle_panel = Boolean(normalized.display.show_angle_panel);
   normalized.display.show_corner_values = Boolean(normalized.display.show_corner_values);
   normalized.display.show_compass_ring = Boolean(normalized.display.show_compass_ring);
   normalized.display.round_overlay_scale = clampNumber(normalized.display.round_overlay_scale, 0.2, 3, DEFAULT_DISPLAY.round_overlay_scale);
@@ -1424,6 +1428,9 @@ class WitHaLovelaceCard extends HTMLElement {
           padding-top: 10px;
           font-family: Arial, sans-serif;
         }
+        .value-panel.shift-down {
+          margin-top: 28px;
+        }
         .value-row {
           display: grid;
           grid-template-columns: 1fr auto;
@@ -1570,6 +1577,7 @@ class WitHaLovelaceCard extends HTMLElement {
       angleXValue: this.shadowRoot.querySelector(".angle-x-value"),
       angleYValue: this.shadowRoot.querySelector(".angle-y-value"),
       angleZValue: this.shadowRoot.querySelector(".angle-z-value"),
+      valuePanel: this.shadowRoot.querySelector(".value-panel"),
       compassStatus: this.shadowRoot.querySelector(".compass-status"),
     };
     this._domReady = true;
@@ -1710,7 +1718,9 @@ class WitHaLovelaceCard extends HTMLElement {
     const title = String(this._config.title || "").trim();
     const model = this._buildModel();
     this._syncRoundTargets(model);
-    this._ensureRoundRingSvg();
+    if (this._config.display.show_compass_ring) {
+      this._ensureRoundRingSvg();
+    }
 
     const width = this._nodes.wrapper?.clientWidth || this._nodes.wrapper?.offsetWidth || 540;
     const autoScale = clampNumber(width / 540, 0.62, 1.12, 1);
@@ -1733,11 +1743,11 @@ class WitHaLovelaceCard extends HTMLElement {
     this._nodes.batt.style.fontSize = `${infoPx}px`;
     this._nodes.temp.style.color = this._config.display.text_color;
     this._nodes.batt.style.color = this._config.display.text_color;
-    this._nodes.wrapper.style.background = this._config.display.background_color;
     this._nodes.ringRotor.hidden = !this._config.display.show_compass_ring;
     this._nodes.compassIndex.hidden = !this._config.display.show_compass_ring;
     const roundBgUrl = String(this._config.image || "").trim();
     this._nodes.roundBg.hidden = !roundBgUrl;
+    this._nodes.wrapper.style.background = roundBgUrl ? "transparent" : this._config.display.background_color;
     if (roundBgUrl) {
       if (this._nodes.roundBg.dataset.src !== roundBgUrl) {
         this._nodes.roundBg.dataset.src = roundBgUrl;
@@ -1777,6 +1787,7 @@ class WitHaLovelaceCard extends HTMLElement {
     this._nodes.angleXLabel.style.color = this._config.display.text_color;
     this._nodes.angleYLabel.style.color = this._config.display.text_color;
     this._nodes.angleZLabel.style.color = this._config.display.text_color;
+    this._nodes.valuePanel.hidden = !this._config.display.show_angle_panel;
 
     this._nodes.levelCircle.style.background = `
       radial-gradient(circle at 50% 36%, ${this._config.display.level_highlight_color}, rgba(255,255,255,0) 35%),
@@ -1808,6 +1819,10 @@ class WitHaLovelaceCard extends HTMLElement {
       applyCornerCell(this._nodes.cornerRL, model.corners.rl);
       applyCornerCell(this._nodes.cornerRR, model.corners.rr);
     }
+    this._nodes.valuePanel.classList.toggle(
+      "shift-down",
+      this._config.display.show_angle_panel && !this._config.display.show_corner_values,
+    );
 
     if (this._config.display.show_compass_status && model.yawAvailable && !model.compassReliable) {
       this._nodes.compassStatus.textContent = this._t("compass_reliability_hint");
@@ -2125,6 +2140,7 @@ class WitHaLovelaceCardEditor extends HTMLElement {
           </div>
           <label class="check"><input id="show_temperature" data-group="display" type="checkbox" ${c.display.show_temperature ? "checked" : ""} /> ${escapeHtml(this._t("show_temperature"))}</label>
           <label class="check"><input id="show_battery" data-group="display" type="checkbox" ${c.display.show_battery ? "checked" : ""} /> ${escapeHtml(this._t("show_battery"))}</label>
+          <label class="check"><input id="show_angle_panel" data-group="display" type="checkbox" ${c.display.show_angle_panel ? "checked" : ""} /> ${escapeHtml(this._t("show_angle_panel"))}</label>
           <label class="check"><input id="show_corner_values" data-group="display" type="checkbox" ${c.display.show_corner_values ? "checked" : ""} /> ${escapeHtml(this._t("show_corner_values"))}</label>
           <label class="check"><input id="show_compass_ring" data-group="display" type="checkbox" ${c.display.show_compass_ring ? "checked" : ""} /> ${escapeHtml(this._t("show_compass_ring"))}</label>
           <label class="check"><input id="show_compass_status" data-group="display" type="checkbox" ${c.display.show_compass_status ? "checked" : ""} /> ${escapeHtml(this._t("show_compass_status"))}</label>

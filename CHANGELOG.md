@@ -9,6 +9,21 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.2.5] - 2026-03-11
+
+### Added
+- New round-compass display toggle:
+  - `display.show_angle_panel` to show/hide the `AngleX/AngleY/AngleZ` block.
+
+### Changed
+- In `round_compass` mode, the card now forces a transparent wrapper background whenever a background image (`image`) is set, so the image remains fully visible.
+- Improved round-compass layout behavior:
+  - when angle panel is hidden, corner/value block spacing is adjusted to keep visual balance.
+
+### Tests
+- Extended normalization tests for:
+  - `display.show_angle_panel` default and boolean coercion.
+
 ## [0.2.4] - 2026-03-11
 
 ### Added

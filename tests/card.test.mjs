@@ -130,6 +130,7 @@ test("normalizeConfig applies defaults", () => {
   assert.equal(cfg.display.round_overlay_scale, 1);
   assert.equal(cfg.display.round_overlay_offset_x, 0);
   assert.equal(cfg.display.round_overlay_offset_y, 0);
+  assert.equal(cfg.display.show_angle_panel, true);
   assert.equal(cfg.display.show_compass_ring, true);
   assert.equal(cfg.display.text_size_mode, "auto");
   assert.equal(cfg.display.background_color, "#9bc4d6");
@@ -179,6 +180,7 @@ test("normalizeConfig validates display mode and yaw-related orientation fields"
       round_overlay_scale: 99,
       round_overlay_offset_x: 250,
       round_overlay_offset_y: -250,
+      show_angle_panel: 0,
       show_compass_ring: 0,
     },
     entities: { yaw: "sensor.yaw" },
@@ -194,6 +196,7 @@ test("normalizeConfig validates display mode and yaw-related orientation fields"
   assert.equal(good.display.round_overlay_scale, 3);
   assert.equal(good.display.round_overlay_offset_x, 100);
   assert.equal(good.display.round_overlay_offset_y, -100);
+  assert.equal(good.display.show_angle_panel, false);
   assert.equal(good.display.show_compass_ring, false);
 
   const bad = runtime.api.normalizeConfig({

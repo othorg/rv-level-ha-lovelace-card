@@ -37,6 +37,7 @@ Current release line: `0.2.x` with dual visualization modes and full editor-base
   - text size mode (`auto`, `small`, `medium`, `large`)
   - background + bubble/level/compass colors
   - optional compass ring visibility (`show_compass_ring`)
+  - optional AngleX/AngleY/AngleZ panel visibility (`show_angle_panel`)
   - optional compass reliability hint
   - optional temperature/battery/corner labels
 - Orientation correction options:
