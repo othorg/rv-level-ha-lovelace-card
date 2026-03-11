@@ -110,17 +110,17 @@ For reliable leveling values, sensor placement matters more than card settings.
 
 If needed, add manually:
 
-- URL: `/hacsfiles/rv-level-ha-lovelace-card/wit-ha-lovelace-card.js`
+- URL: `/hacsfiles/rv-level-ha-lovelace-card/rv-ha-lovelace-card.js`
 - Type: `module`
 
 ## Card type
 
-`custom:wit-ha-lovelace-card`
+`custom:rv-ha-lovelace-card`
 
 ## Example YAML (optional)
 
 ```yaml
-type: custom:wit-ha-lovelace-card
+type: custom:rv-ha-lovelace-card
 title: Flair 920 - Level
 entities:
   pitch: sensor.easylevelrv_neigung_x
@@ -175,7 +175,7 @@ npm test
 To publish updates so HACS can reliably detect new versions:
 
 1. Update version in:
-`package.json` and `dist/wit-ha-lovelace-card.js` (`CARD_VERSION`).
+`package.json` and `dist/rv-ha-lovelace-card.js` (`CARD_VERSION`).
 2. Commit and push to `main`.
 3. Create and push a new semver tag:
 `git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push origin vX.Y.Z`

@@ -9,6 +9,12 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.3.2] - 2026-03-11
+
+### Changed
+- Reworked `rv_top` inline SVG to more closely match the visual structure of `assets/rv_top_flair.png` while keeping the central green target removed.
+- Improved `rv_top` floorplan linework/details for a cleaner and more recognizable motorhome top-view.
+
 ## [0.3.1] - 2026-03-11
 
 ### Changed
@@ -63,7 +69,7 @@ All notable changes to this project are documented in this file and in GitHub Re
 - Updated README repository/resource references to `rv-level-ha-lovelace-card`.
 - Added fallback asset paths for both repository slugs:
   - `rv-level-ha-lovelace-card` (new)
-  - `wit-ha-lovelace-card` (legacy compatibility)
+  - `rv-ha-lovelace-card` (legacy compatibility)
 - Added maintainer checklist: `docs/HACS_DEFAULT_SUBMISSION.md`.
 
 ## [0.2.8] - 2026-03-11
@@ -91,7 +97,7 @@ All notable changes to this project are documented in this file and in GitHub Re
 ## [0.2.6] - 2026-03-11
 
 ### Changed
-- Branding assets renamed from `wit-*` to `rv-level-*` for icon/top-view fallback files.
+- Branding assets were renamed to the `rv-level-*` naming scheme for icon/top-view fallback files.
 - Added generated PNG branding set in `brand/` and mirrored icon/logo PNGs in `dist/`.
 
 ## [0.2.5] - 2026-03-11
@@ -327,19 +333,19 @@ All notable changes to this project are documented in this file and in GitHub Re
 ## [0.1.2] - 2026-03-10
 
 ### Fixed
-- Improved card-picker compatibility by accepting both `wit-ha-lovelace-card` and `custom:wit-ha-lovelace-card` config types in `setConfig`.
+- Improved card-picker compatibility by accepting both `rv-ha-lovelace-card` and `custom:rv-ha-lovelace-card` config types in `setConfig`.
 - Disabled card preview in metadata (`preview: false`) to avoid stuck preview loading in Home Assistant card picker.
 - Added regression tests for supported card-type variants and metadata preview flag.
 
 ## [0.1.1] - 2026-03-10
 
 ### Fixed
-- Fixed custom card picker initialization by aligning `window.customCards` metadata type with Home Assistant expectations (`type: \"wit-ha-lovelace-card\"`).
+- Fixed custom card picker initialization by aligning `window.customCards` metadata type with Home Assistant expectations (`type: \"rv-ha-lovelace-card\"`).
 - Updated metadata registration test accordingly.
 
 ## [0.1.0] - 2026-03-10
 
 ### Added
-- Initial project scaffold for `wit-ha-lovelace-card`.
+- Initial project scaffold for `rv-ha-lovelace-card`.
 - HACS metadata, test setup, CI workflow, documentation, and changelog.
 - First Lovelace card MVP with configurable entities and geometry for RV leveling visualization.

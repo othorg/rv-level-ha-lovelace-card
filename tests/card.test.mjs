@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const CARD_SOURCE = path.resolve(__dirname, "../dist/wit-ha-lovelace-card.js");
+const CARD_SOURCE = path.resolve(__dirname, "../dist/rv-ha-lovelace-card.js");
 
 class FakeEventTarget {
   addEventListener() {}
@@ -78,7 +78,7 @@ function loadRuntime() {
     },
     window: sandboxWindow,
     document: {
-      currentScript: { src: "https://example.local/hacsfiles/wit-ha-lovelace-card/wit-ha-lovelace-card.js" },
+      currentScript: { src: "https://example.local/hacsfiles/rv-level-ha-lovelace-card/rv-ha-lovelace-card.js" },
       querySelectorAll() { return []; },
     },
   };
@@ -99,13 +99,13 @@ function loadRuntime() {
 test("exports test api", () => {
   const runtime = loadRuntime();
   assert.ok(runtime.api);
-  assert.equal(runtime.api.CARD_TYPE, "wit-ha-lovelace-card");
+  assert.equal(runtime.api.CARD_TYPE, "rv-ha-lovelace-card");
 });
 
 test("supports plain and custom-prefixed card types", () => {
   const runtime = loadRuntime();
-  assert.equal(runtime.api.isSupportedCardType("wit-ha-lovelace-card"), true);
-  assert.equal(runtime.api.isSupportedCardType("custom:wit-ha-lovelace-card"), true);
+  assert.equal(runtime.api.isSupportedCardType("rv-ha-lovelace-card"), true);
+  assert.equal(runtime.api.isSupportedCardType("custom:rv-ha-lovelace-card"), true);
   assert.equal(runtime.api.isSupportedCardType("custom:other-card"), false);
 });
 
@@ -117,7 +117,7 @@ test("version in package and card source are in sync", () => {
 
 test("normalizeConfig applies defaults", () => {
   const runtime = loadRuntime();
-  const cfg = runtime.api.normalizeConfig({ type: "custom:wit-ha-lovelace-card" });
+  const cfg = runtime.api.normalizeConfig({ type: "custom:rv-ha-lovelace-card" });
 
   assert.equal(cfg.entities.pitch, "sensor.easylevelrv_neigung_x");
   assert.equal(cfg.entities.yaw, "");
@@ -149,7 +149,7 @@ test("normalizeConfig applies defaults", () => {
 test("normalizeConfig preserves title and image", () => {
   const runtime = loadRuntime();
   const cfg = runtime.api.normalizeConfig({
-    type: "custom:wit-ha-lovelace-card",
+    type: "custom:rv-ha-lovelace-card",
     title: "Mein Titel",
     image: "/local/custom/image.png",
   });
@@ -160,7 +160,7 @@ test("normalizeConfig preserves title and image", () => {
 test("normalizeConfig keeps backward-compatible rv_top defaults when mode missing", () => {
   const runtime = loadRuntime();
   const cfg = runtime.api.normalizeConfig({
-    type: "custom:wit-ha-lovelace-card",
+    type: "custom:rv-ha-lovelace-card",
     display: {
       max_tilt_deg: 7,
       text_size_mode: "small",
@@ -174,7 +174,7 @@ test("normalizeConfig keeps backward-compatible rv_top defaults when mode missin
 test("normalizeConfig validates display mode and yaw-related orientation fields", () => {
   const runtime = loadRuntime();
   const good = runtime.api.normalizeConfig({
-    type: "custom:wit-ha-lovelace-card",
+    type: "custom:rv-ha-lovelace-card",
     display: {
       mode: "round_compass",
       round_overlay_scale: 99,
@@ -200,7 +200,7 @@ test("normalizeConfig validates display mode and yaw-related orientation fields"
   assert.equal(good.display.show_compass_ring, false);
 
   const bad = runtime.api.normalizeConfig({
-    type: "custom:wit-ha-lovelace-card",
+    type: "custom:rv-ha-lovelace-card",
     display: { mode: "other_mode" },
     orientation: { yaw_offset_deg: -999 },
   });
@@ -212,13 +212,13 @@ test("normalizeConfig keeps valid text_size_mode and falls back for invalid valu
   const runtime = loadRuntime();
 
   const validCfg = runtime.api.normalizeConfig({
-    type: "custom:wit-ha-lovelace-card",
+    type: "custom:rv-ha-lovelace-card",
     display: { text_size_mode: "large" },
   });
   assert.equal(validCfg.display.text_size_mode, "large");
 
   const invalidCfg = runtime.api.normalizeConfig({
-    type: "custom:wit-ha-lovelace-card",
+    type: "custom:rv-ha-lovelace-card",
     display: { text_size_mode: "huge" },
   });
   assert.equal(invalidCfg.display.text_size_mode, "auto");
@@ -308,7 +308,7 @@ test("computeRoundDotGeometry uses round ratio and keeps edge-safe track", () =>
 test("normalizeConfig sanitizes invalid color strings", () => {
   const runtime = loadRuntime();
   const cfg = runtime.api.normalizeConfig({
-    type: "custom:wit-ha-lovelace-card",
+    type: "custom:rv-ha-lovelace-card",
     display: {
       background_color: "url(javascript:alert(1))",
       level_gradient_start: "inherit",
@@ -364,10 +364,10 @@ test("normalize360 wraps negative and oversized angles", () => {
 
 test("round_compass model keeps bubble valid when yaw is unavailable", () => {
   const runtime = loadRuntime();
-  const CardClass = runtime.registry.get("wit-ha-lovelace-card");
+  const CardClass = runtime.registry.get("rv-ha-lovelace-card");
   const card = new CardClass();
   card._config = runtime.api.normalizeConfig({
-    type: "custom:wit-ha-lovelace-card",
+    type: "custom:rv-ha-lovelace-card",
     display: { mode: "round_compass", max_tilt_deg: 5 },
     entities: {
       pitch: "sensor.pitch",
@@ -391,10 +391,10 @@ test("round_compass model keeps bubble valid when yaw is unavailable", () => {
 
 test("round_compass ring rotation uses negative heading", () => {
   const runtime = loadRuntime();
-  const CardClass = runtime.registry.get("wit-ha-lovelace-card");
+  const CardClass = runtime.registry.get("rv-ha-lovelace-card");
   const card = new CardClass();
   card._config = runtime.api.normalizeConfig({
-    type: "custom:wit-ha-lovelace-card",
+    type: "custom:rv-ha-lovelace-card",
     display: { mode: "round_compass" },
     entities: {
       pitch: "sensor.pitch",
@@ -420,10 +420,10 @@ test("round_compass ring rotation uses negative heading", () => {
 
 test("corner raise values are exposed in centimeters for display and tolerance", () => {
   const runtime = loadRuntime();
-  const CardClass = runtime.registry.get("wit-ha-lovelace-card");
+  const CardClass = runtime.registry.get("rv-ha-lovelace-card");
   const card = new CardClass();
   card._config = runtime.api.normalizeConfig({
-    type: "custom:wit-ha-lovelace-card",
+    type: "custom:rv-ha-lovelace-card",
     display: { level_tolerance_cm: 4 },
     geometry: {
       wheelbase_mm: 2000,
@@ -449,7 +449,7 @@ test("corner raise values are exposed in centimeters for display and tolerance",
 
 test("setConfig forces DOM rebuild on display mode switch", () => {
   const runtime = loadRuntime();
-  const CardClass = runtime.registry.get("wit-ha-lovelace-card");
+  const CardClass = runtime.registry.get("rv-ha-lovelace-card");
   const card = new CardClass();
   card._render = () => {};
   card._domReady = true;
@@ -457,7 +457,7 @@ test("setConfig forces DOM rebuild on display mode switch", () => {
   card._currentMode = "rv_top";
 
   card.setConfig({
-    type: "custom:wit-ha-lovelace-card",
+    type: "custom:rv-ha-lovelace-card",
     display: { mode: "round_compass" },
   });
   assert.equal(card._domReady, false);
@@ -478,16 +478,16 @@ test("readNumericState returns null for unavailable", () => {
 test("custom card metadata is registered", () => {
   const runtime = loadRuntime();
   assert.equal(runtime.customCards.length, 1);
-  assert.equal(runtime.customCards[0].type, "wit-ha-lovelace-card");
+  assert.equal(runtime.customCards[0].type, "rv-ha-lovelace-card");
   assert.equal(runtime.customCards[0].preview, false);
 });
 
 test("rv_top mode builds SVG motorhome drawing", () => {
   const runtime = loadRuntime();
-  const CardClass = runtime.registry.get("wit-ha-lovelace-card");
+  const CardClass = runtime.registry.get("rv-ha-lovelace-card");
   const card = new CardClass();
   card._render = () => {};
-  card.setConfig({ type: "custom:wit-ha-lovelace-card", display: { mode: "rv_top" } });
+  card.setConfig({ type: "custom:rv-ha-lovelace-card", display: { mode: "rv_top" } });
   const svg = card._buildRvTopSvg();
   assert.ok(svg.includes("<svg"), "should contain opening svg tag");
   assert.ok(svg.includes("viewBox"), "should have a viewBox");
@@ -497,13 +497,13 @@ test("rv_top mode builds SVG motorhome drawing", () => {
 
 test("rv_top SVG uses configured text_color for stroke", () => {
   const runtime = loadRuntime();
-  const CardClass = runtime.registry.get("wit-ha-lovelace-card");
+  const CardClass = runtime.registry.get("rv-ha-lovelace-card");
   const card = new CardClass();
   card._render = () => {};
-  card.setConfig({ type: "custom:wit-ha-lovelace-card", display: { mode: "rv_top", text_color: "#ff0000" } });
+  card.setConfig({ type: "custom:rv-ha-lovelace-card", display: { mode: "rv_top", text_color: "#ff0000" } });
   const svg1 = card._buildRvTopSvg();
   assert.ok(svg1.includes("#ff0000"), "should use configured stroke color");
-  card.setConfig({ type: "custom:wit-ha-lovelace-card", display: { mode: "rv_top", text_color: "#0000ff" } });
+  card.setConfig({ type: "custom:rv-ha-lovelace-card", display: { mode: "rv_top", text_color: "#0000ff" } });
   const svg2 = card._buildRvTopSvg();
   assert.ok(svg2.includes("#0000ff"), "should use updated stroke color");
 });
@@ -511,13 +511,13 @@ test("rv_top SVG uses configured text_color for stroke", () => {
 test("normalizeConfig show_angle_panel defaults to true and accepts false", () => {
   const runtime = loadRuntime();
   const defaultCfg = runtime.api.normalizeConfig({
-    type: "custom:wit-ha-lovelace-card",
+    type: "custom:rv-ha-lovelace-card",
     display: { mode: "rv_top" },
   });
   assert.equal(defaultCfg.display.show_angle_panel, true);
 
   const offCfg = runtime.api.normalizeConfig({
-    type: "custom:wit-ha-lovelace-card",
+    type: "custom:rv-ha-lovelace-card",
     display: { mode: "rv_top", show_angle_panel: false },
   });
   assert.equal(offCfg.display.show_angle_panel, false);
@@ -526,13 +526,13 @@ test("normalizeConfig show_angle_panel defaults to true and accepts false", () =
 test("normalizeConfig show_corner_values defaults to true and accepts false", () => {
   const runtime = loadRuntime();
   const defaultCfg = runtime.api.normalizeConfig({
-    type: "custom:wit-ha-lovelace-card",
+    type: "custom:rv-ha-lovelace-card",
     display: { mode: "rv_top" },
   });
   assert.equal(defaultCfg.display.show_corner_values, true);
 
   const offCfg = runtime.api.normalizeConfig({
-    type: "custom:wit-ha-lovelace-card",
+    type: "custom:rv-ha-lovelace-card",
     display: { mode: "rv_top", show_corner_values: false },
   });
   assert.equal(offCfg.display.show_corner_values, false);
@@ -541,13 +541,13 @@ test("normalizeConfig show_corner_values defaults to true and accepts false", ()
 test("normalizeConfig show_compass_ring defaults to true and accepts false for rv_top", () => {
   const runtime = loadRuntime();
   const defaultCfg = runtime.api.normalizeConfig({
-    type: "custom:wit-ha-lovelace-card",
+    type: "custom:rv-ha-lovelace-card",
     display: { mode: "rv_top" },
   });
   assert.equal(defaultCfg.display.show_compass_ring, true);
 
   const offCfg = runtime.api.normalizeConfig({
-    type: "custom:wit-ha-lovelace-card",
+    type: "custom:rv-ha-lovelace-card",
     display: { mode: "rv_top", show_compass_ring: false },
   });
   assert.equal(offCfg.display.show_compass_ring, false);
@@ -555,12 +555,12 @@ test("normalizeConfig show_compass_ring defaults to true and accepts false for r
 
 test("rv_top mode smoothing system is not blocked by mode guard", () => {
   const runtime = loadRuntime();
-  const CardClass = runtime.registry.get("wit-ha-lovelace-card");
+  const CardClass = runtime.registry.get("rv-ha-lovelace-card");
   const card = new CardClass();
   card._render = () => {};
-  card.setConfig({ type: "custom:wit-ha-lovelace-card", display: { mode: "rv_top" } });
+  card.setConfig({ type: "custom:rv-ha-lovelace-card", display: { mode: "rv_top" } });
   card._config = runtime.api.normalizeConfig({
-    type: "custom:wit-ha-lovelace-card",
+    type: "custom:rv-ha-lovelace-card",
     display: { mode: "rv_top" },
     entities: { pitch: "sensor.pitch", roll: "sensor.roll" },
   });

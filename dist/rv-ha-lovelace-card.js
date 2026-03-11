@@ -1,6 +1,6 @@
-const CARD_TYPE = "wit-ha-lovelace-card";
+const CARD_TYPE = "rv-ha-lovelace-card";
 const CARD_NAME = "RV Level Lovelace Card";
-const CARD_VERSION = "0.3.1";
+const CARD_VERSION = "0.3.2";
 
 const DEFAULT_GEOMETRY = {
   wheelbase_mm: 2000,
@@ -238,14 +238,14 @@ function detectScriptBasePath() {
   if (typeof document === "undefined") return "";
 
   const scriptFromCurrent = document.currentScript?.src || "";
-  if (scriptFromCurrent.includes("wit-ha-lovelace-card.js")) {
+  if (scriptFromCurrent.includes("rv-ha-lovelace-card.js")) {
     return scriptFromCurrent.slice(0, scriptFromCurrent.lastIndexOf("/"));
   }
 
   const scripts = document.querySelectorAll?.("script[src]") || [];
   for (const script of scripts) {
     const src = String(script?.src || "");
-    if (src.includes("wit-ha-lovelace-card.js")) {
+    if (src.includes("rv-ha-lovelace-card.js")) {
       return src.slice(0, src.lastIndexOf("/"));
     }
   }
@@ -274,12 +274,6 @@ const DEFAULT_ICON_CANDIDATES = uniq([
   "/local/community/rv-level-ha-lovelace-card/rv-level-icon.png",
   "/local/rv-level-ha-lovelace-card/rv-level-icon.svg",
   "/local/rv-level-ha-lovelace-card/rv-level-icon.png",
-  "/hacsfiles/wit-ha-lovelace-card/rv-level-icon.svg",
-  "/hacsfiles/wit-ha-lovelace-card/rv-level-icon.png",
-  "/local/community/wit-ha-lovelace-card/rv-level-icon.svg",
-  "/local/community/wit-ha-lovelace-card/rv-level-icon.png",
-  "/local/wit-ha-lovelace-card/rv-level-icon.svg",
-  "/local/wit-ha-lovelace-card/rv-level-icon.png",
 ]);
 
 function resolveLanguage(hass) {
@@ -675,7 +669,7 @@ class WitHaLovelaceCard extends HTMLElement {
   }
 
   static getConfigElement() {
-    return document.createElement("wit-ha-lovelace-card-editor");
+    return document.createElement("rv-ha-lovelace-card-editor");
   }
 
   setConfig(config) {
@@ -1359,32 +1353,76 @@ class WitHaLovelaceCard extends HTMLElement {
     const dimStroke = escapeHtml(sanitizeCssColor(this._config.display.text_color, "#111111"));
     return `
       <svg viewBox="0 0 100 150" role="img" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-        <g transform="translate(50 75) scale(1.18) translate(-50 -75)">
-        <!-- Body outline: rounded front (cab), squarer rear -->
-        <path d="M32,30 Q32,14 50,14 Q68,14 68,30 L68,130 Q68,136 62,136 L38,136 Q32,136 32,130 Z"
-              fill="rgba(0,0,0,0.04)" stroke="${stroke}" stroke-width="1.6" stroke-linejoin="round" />
-        <!-- Cab divider -->
-        <line x1="33" y1="44" x2="67" y2="44" stroke="${stroke}" stroke-width="0.7" opacity="0.5" />
-        <!-- Windshield -->
-        <rect x="38" y="20" width="24" height="16" rx="4" fill="rgba(120,170,200,0.25)" stroke="${stroke}" stroke-width="0.8" />
-        <!-- Headlights -->
-        <circle cx="36" cy="17" r="2.5" fill="rgba(255,250,200,0.35)" stroke="${stroke}" stroke-width="0.6" />
-        <circle cx="64" cy="17" r="2.5" fill="rgba(255,250,200,0.35)" stroke="${stroke}" stroke-width="0.6" />
-        <!-- Side windows -->
-        <rect x="32.5" y="54" width="2.5" height="14" rx="1" fill="rgba(120,170,200,0.2)" stroke="${dimStroke}" stroke-width="0.5" opacity="0.6" />
-        <rect x="32.5" y="76" width="2.5" height="14" rx="1" fill="rgba(120,170,200,0.2)" stroke="${dimStroke}" stroke-width="0.5" opacity="0.6" />
-        <rect x="65" y="54" width="2.5" height="14" rx="1" fill="rgba(120,170,200,0.2)" stroke="${dimStroke}" stroke-width="0.5" opacity="0.6" />
-        <rect x="65" y="76" width="2.5" height="14" rx="1" fill="rgba(120,170,200,0.2)" stroke="${dimStroke}" stroke-width="0.5" opacity="0.6" />
-        <!-- Door (right rear) -->
-        <rect x="65.5" y="100" width="2.5" height="20" rx="1" fill="none" stroke="${dimStroke}" stroke-width="0.5" opacity="0.5" />
-        <path d="M68,100 Q73,110 68,120" fill="none" stroke="${dimStroke}" stroke-width="0.4" opacity="0.35" />
-        <!-- Wheels -->
-        <rect x="21" y="24" width="8" height="16" rx="3" fill="rgba(80,80,80,0.2)" stroke="${stroke}" stroke-width="1" />
-        <rect x="71" y="24" width="8" height="16" rx="3" fill="rgba(80,80,80,0.2)" stroke="${stroke}" stroke-width="1" />
-        <rect x="21" y="112" width="8" height="16" rx="3" fill="rgba(80,80,80,0.2)" stroke="${stroke}" stroke-width="1" />
-        <rect x="71" y="112" width="8" height="16" rx="3" fill="rgba(80,80,80,0.2)" stroke="${stroke}" stroke-width="1" />
-        <!-- Rear bumper hint -->
-        <line x1="36" y1="136" x2="64" y2="136" stroke="${stroke}" stroke-width="0.8" opacity="0.4" />
+        <defs>
+          <linearGradient id="rv-shell" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="rgba(171,203,220,0.45)"/>
+            <stop offset="100%" stop-color="rgba(145,181,199,0.38)"/>
+          </linearGradient>
+          <linearGradient id="rv-panel-dark" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="rgba(67,75,94,0.95)"/>
+            <stop offset="100%" stop-color="rgba(57,63,79,0.92)"/>
+          </linearGradient>
+          <linearGradient id="rv-window" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="rgba(161,198,216,0.56)"/>
+            <stop offset="100%" stop-color="rgba(133,173,194,0.48)"/>
+          </linearGradient>
+        </defs>
+        <g transform="translate(50 75) scale(1.16) translate(-50 -75)">
+          <!-- Outer shell -->
+          <path d="M31,25 Q31,13 50,13 Q69,13 69,25 L69,129 Q69,136 61.5,136 L38.5,136 Q31,136 31,129 Z"
+                fill="url(#rv-shell)" stroke="${stroke}" stroke-width="1.25" stroke-linejoin="round"/>
+
+          <!-- Front cab -->
+          <path d="M34,28 Q34,20 50,20 Q66,20 66,28 L66,47 Q66,51 62,51 L38,51 Q34,51 34,47 Z"
+                fill="rgba(150,186,206,0.45)" stroke="${dimStroke}" stroke-width="0.7"/>
+          <path d="M39,31 Q44,26 50,26 Q56,26 61,31" fill="none" stroke="${dimStroke}" stroke-width="0.55" opacity="0.85"/>
+          <circle cx="43" cy="35" r="1.35" fill="none" stroke="${dimStroke}" stroke-width="0.5"/>
+          <circle cx="57" cy="35" r="1.35" fill="none" stroke="${dimStroke}" stroke-width="0.5"/>
+
+          <!-- Seats -->
+          <g transform="translate(0.6,0.6)">
+            <rect x="39.5" y="38.3" width="8.2" height="12.4" rx="2.2" fill="rgba(66,73,92,0.95)" stroke="${stroke}" stroke-width="0.58" transform="rotate(-24 43.6 44.5)"/>
+            <rect x="52.3" y="38.3" width="8.2" height="12.4" rx="2.2" fill="rgba(66,73,92,0.95)" stroke="${stroke}" stroke-width="0.58" transform="rotate(24 56.4 44.5)"/>
+          </g>
+
+          <!-- Side wall blocks -->
+          <rect x="31.4" y="52.5" width="11.2" height="30.2" rx="1.4" fill="url(#rv-panel-dark)" stroke="${dimStroke}" stroke-width="0.45"/>
+          <rect x="57.4" y="52.5" width="11.2" height="30.2" rx="1.4" fill="url(#rv-panel-dark)" stroke="${dimStroke}" stroke-width="0.45"/>
+          <rect x="31.9" y="53.6" width="1.55" height="12" rx="0.6" fill="none" stroke="${dimStroke}" stroke-width="0.45" opacity="0.8"/>
+          <rect x="31.9" y="67.6" width="1.55" height="12" rx="0.6" fill="none" stroke="${dimStroke}" stroke-width="0.45" opacity="0.8"/>
+          <rect x="66.55" y="53.6" width="1.55" height="12" rx="0.6" fill="none" stroke="${dimStroke}" stroke-width="0.45" opacity="0.8"/>
+          <rect x="66.55" y="67.6" width="1.55" height="12" rx="0.6" fill="none" stroke="${dimStroke}" stroke-width="0.45" opacity="0.8"/>
+
+          <!-- Middle living area (without green target circle) -->
+          <rect x="42.8" y="53.1" width="14.4" height="45" rx="3.3" fill="url(#rv-window)" stroke="${dimStroke}" stroke-width="0.55"/>
+          <path d="M43.4,76.8 L56.6,76.8" stroke="${dimStroke}" stroke-width="0.45" opacity="0.55"/>
+
+          <!-- Kitchen left -->
+          <rect x="33.9" y="83.4" width="12.4" height="20.4" rx="1.4" fill="rgba(150,186,206,0.38)" stroke="${dimStroke}" stroke-width="0.52"/>
+          <circle cx="37.2" cy="89.6" r="2.05" fill="none" stroke="${dimStroke}" stroke-width="0.55"/>
+          <rect x="35.5" y="94.1" width="3.4" height="4.5" fill="none" stroke="${dimStroke}" stroke-width="0.45"/>
+          <rect x="40.2" y="94.1" width="4.35" height="8.4" fill="none" stroke="${dimStroke}" stroke-width="0.45"/>
+          <path d="M35.4,100.5 L38.9,100.5 M35.4,101.8 L38.9,101.8 M35.4,103.1 L38.9,103.1" stroke="${dimStroke}" stroke-width="0.33"/>
+
+          <!-- Bathroom right -->
+          <rect x="53.9" y="86.2" width="11.5" height="17.1" rx="1.2" fill="rgba(150,186,206,0.38)" stroke="${dimStroke}" stroke-width="0.52"/>
+          <ellipse cx="59.2" cy="98.6" rx="2.2" ry="3.2" fill="none" stroke="${dimStroke}" stroke-width="0.45"/>
+          <circle cx="60.5" cy="98.6" r="0.43" fill="${dimStroke}" opacity="0.85"/>
+          <path d="M63.6,86.6 Q67.8,92.8 63.6,98.8" fill="none" stroke="${dimStroke}" stroke-width="0.38" opacity="0.72"/>
+          <path d="M63.0,102.0 Q66.8,105.6 63.0,109.2" fill="none" stroke="${dimStroke}" stroke-width="0.38" opacity="0.6"/>
+
+          <!-- Rear corridor + dark rear block -->
+          <rect x="45.5" y="102.8" width="9.1" height="20.4" rx="1.2" fill="none" stroke="${dimStroke}" stroke-width="0.5"/>
+          <rect x="31.6" y="111.5" width="36.8" height="24.2" rx="1.8" fill="url(#rv-panel-dark)" stroke="${dimStroke}" stroke-width="0.45"/>
+          <path d="M50,111.9 L50,135.3" stroke="${dimStroke}" stroke-width="0.45" opacity="0.82"/>
+          <rect x="36.3" y="122.6" width="9.1" height="6.7" rx="1.7" fill="none" stroke="rgba(185,205,219,0.75)" stroke-width="0.48"/>
+          <rect x="54.6" y="122.6" width="9.1" height="6.7" rx="1.7" fill="none" stroke="rgba(185,205,219,0.75)" stroke-width="0.48"/>
+
+          <!-- Center axis / helper lines -->
+          <path d="M50,53.5 L50,110.8" stroke="${dimStroke}" stroke-width="0.33" opacity="0.48"/>
+          <path d="M34.7,84.4 L65.3,84.4" stroke="${dimStroke}" stroke-width="0.33" opacity="0.48"/>
+          <path d="M34.7,95.2 L65.3,95.2" stroke="${dimStroke}" stroke-width="0.33" opacity="0.48"/>
+          <path d="M33.2,106.0 L66.8,106.0" stroke="${dimStroke}" stroke-width="0.33" opacity="0.42"/>
         </g>
       </svg>
     `;
@@ -2388,8 +2426,8 @@ if (!customElements.get(CARD_TYPE)) {
   customElements.define(CARD_TYPE, WitHaLovelaceCard);
 }
 
-if (!customElements.get("wit-ha-lovelace-card-editor")) {
-  customElements.define("wit-ha-lovelace-card-editor", WitHaLovelaceCardEditor);
+if (!customElements.get("rv-ha-lovelace-card-editor")) {
+  customElements.define("rv-ha-lovelace-card-editor", WitHaLovelaceCardEditor);
 }
 
 window.customCards = window.customCards || [];
