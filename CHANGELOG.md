@@ -2,12 +2,26 @@
 
 All notable changes to this project are documented in this file and in GitHub Releases:
 
-- https://github.com/othorg/wit-ha-lovelace-card/releases
+- https://github.com/othorg/rv-level-ha-lovelace-card/releases
 
 ## [Unreleased]
 
 ### Changed
 - No changes yet.
+
+## [0.2.7] - 2026-03-11
+
+### Changed
+- Improved text sharpness in `round_compass` header:
+  - moved temperature/title/battery header out of scaled overlay transform
+  - removed blur-prone header text shadow and applied font smoothing
+- Optimized overlay transform behavior:
+  - uses `transform: none` when scale/offset are default values
+- Updated display toggle wording:
+  - `show_corner_values` now reads `Nivellierpunkte anzeigen` / `Show leveling points`
+
+### Fixed
+- In `rv_top`, disabling `show_corner_values` now hides the entire corner visualization block (markers + values), not only the numeric text.
 
 ## [0.2.6] - 2026-03-11
 

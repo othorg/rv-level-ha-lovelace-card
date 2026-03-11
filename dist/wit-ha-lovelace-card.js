@@ -1,6 +1,6 @@
 const CARD_TYPE = "wit-ha-lovelace-card";
 const CARD_NAME = "RV Level Lovelace Card";
-const CARD_VERSION = "0.2.6";
+const CARD_VERSION = "0.2.7";
 
 const DEFAULT_GEOMETRY = {
   wheelbase_mm: 2000,
@@ -112,7 +112,7 @@ const I18N = {
     show_temperature: "Temperatur anzeigen",
     show_battery: "Batterie anzeigen",
     show_angle_panel: "AngleX/Y/Z anzeigen",
-    show_corner_values: "Eckwerte anzeigen",
+    show_corner_values: "Nivellierpunkte anzeigen",
     show_compass_ring: "Kompassring anzeigen",
     round_overlay_scale: "Kompass-Overlay Skalierung",
     round_overlay_offset_x: "Kompass-Overlay X-Offset (%)",
@@ -182,7 +182,7 @@ const I18N = {
     show_temperature: "Show temperature",
     show_battery: "Show battery",
     show_angle_panel: "Show AngleX/Y/Z",
-    show_corner_values: "Show corner values",
+    show_corner_values: "Show leveling points",
     show_compass_ring: "Show compass ring",
     round_overlay_scale: "Compass overlay scale",
     round_overlay_offset_x: "Compass overlay X offset (%)",
@@ -1313,7 +1313,9 @@ class WitHaLovelaceCard extends HTMLElement {
         .head-value {
           font-family: Arial, sans-serif;
           color: #111;
-          text-shadow: 0 0 4px rgba(0,0,0,0.6);
+          text-shadow: none;
+          -webkit-font-smoothing: antialiased;
+          text-rendering: optimizeLegibility;
           font-size: 14px;
           white-space: nowrap;
           overflow: hidden;
@@ -1345,6 +1347,9 @@ class WitHaLovelaceCard extends HTMLElement {
           text-overflow: ellipsis;
           max-width: 58%;
           pointer-events: none;
+          text-shadow: none;
+          -webkit-font-smoothing: antialiased;
+          text-rendering: optimizeLegibility;
         }
         .clickable { cursor: pointer; }
         .compass-wrapper {
@@ -1497,12 +1502,12 @@ class WitHaLovelaceCard extends HTMLElement {
       <ha-card>
         <div class="wrapper round">
           <img class="round-bg" alt="" />
-          <div class="round-overlay">
           <div class="round-head">
             <div class="head-value left clickable temp" data-entity-key="temperature"></div>
             <div class="title"></div>
             <div class="head-value right clickable batt" data-entity-key="battery_soc"></div>
           </div>
+          <div class="round-overlay">
           <div class="compass-wrapper">
             <div class="ring-rotor">${this._buildCompassRingSvg()}</div>
             <div class="compass-index"></div>
@@ -1677,6 +1682,13 @@ class WitHaLovelaceCard extends HTMLElement {
     this._nodes.dot.style.borderColor = this._config.display.dot_border_color;
 
     const updateCorner = (markerNode, valueNode, corner) => {
+      const showCornerBlock = this._config.display.show_corner_values;
+      if (markerNode?.parentElement) {
+        markerNode.parentElement.hidden = !showCornerBlock;
+      }
+      valueNode.hidden = !showCornerBlock;
+      if (!showCornerBlock) return;
+
       markerNode.className = "marker";
       markerNode.classList.add(corner.levelOk ? "level" : "raise");
       if (corner.levelOk) {
@@ -1700,16 +1712,11 @@ class WitHaLovelaceCard extends HTMLElement {
         markerNode.style.borderRight = `${raiseHalfPx}px solid transparent`;
         markerNode.style.borderBottom = `${raiseHeightPx}px solid ${this._config.display.raise_color}`;
       }
-      if (this._config.display.show_corner_values) {
-        valueNode.hidden = false;
-        const value = corner.raise === null ? 0 : corner.raise;
-        valueNode.textContent = `${fmtOne(value)} ${this._t("unit_cm")}`;
-        valueNode.style.fontSize = `${cornerPx}px`;
-        valueNode.style.maxWidth = `${cornerMaxWidthPx}px`;
-        valueNode.style.color = this._config.display.text_color;
-      } else {
-        valueNode.hidden = true;
-      }
+      const value = corner.raise === null ? 0 : corner.raise;
+      valueNode.textContent = `${fmtOne(value)} ${this._t("unit_cm")}`;
+      valueNode.style.fontSize = `${cornerPx}px`;
+      valueNode.style.maxWidth = `${cornerMaxWidthPx}px`;
+      valueNode.style.color = this._config.display.text_color;
     };
 
     updateCorner(this._nodes.flm, this._nodes.flv, model.corners.fl);
@@ -1777,7 +1784,11 @@ class WitHaLovelaceCard extends HTMLElement {
       100,
       DEFAULT_DISPLAY.round_overlay_offset_y,
     );
-    this._nodes.roundOverlay.style.transform = `translate(${overlayOffsetX}%, ${overlayOffsetY}%) scale(${overlayScale})`;
+    if (overlayScale === 1 && overlayOffsetX === 0 && overlayOffsetY === 0) {
+      this._nodes.roundOverlay.style.transform = "none";
+    } else {
+      this._nodes.roundOverlay.style.transform = `translate(${overlayOffsetX}%, ${overlayOffsetY}%) scale(${overlayScale})`;
+    }
 
     this._nodes.angleXLabel.textContent = `${this._t("angle_x")}`;
     this._nodes.angleYLabel.textContent = `${this._t("angle_y")}`;
