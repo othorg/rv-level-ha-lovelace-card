@@ -9,6 +9,35 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.2.0] - 2026-03-11
+
+### Added
+- New display mode `display.mode: round_compass` with:
+  - circular level target (crosshair + concentric rings)
+  - rotating compass ring based on yaw
+  - AngleX/AngleY/AngleZ value panel
+- New configurable yaw inputs/options:
+  - `entities.yaw`
+  - `orientation.invert_yaw`
+  - `orientation.yaw_offset_deg`
+
+### Changed
+- Card architecture now supports mode-specific DOM/render paths:
+  - `rv_top` renderer (existing behavior)
+  - `round_compass` renderer
+- Mode switch in editor forces safe DOM rebuild.
+- State tracking now includes `yaw` for reactive updates.
+- Version bumped to `0.2.0`.
+
+### Tests
+- Added regression tests for:
+  - mode normalization and fallback
+  - yaw-related config normalization
+  - heading normalization (0..360)
+  - ring rotation sign
+  - yaw-unavailable fallback in round mode
+  - DOM rebuild behavior on display mode switch
+
 ## [0.1.13] - 2026-03-10
 
 ### Added

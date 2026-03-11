@@ -120,12 +120,55 @@ test("normalizeConfig applies defaults", () => {
   const cfg = runtime.api.normalizeConfig({ type: "custom:wit-ha-lovelace-card" });
 
   assert.equal(cfg.entities.pitch, "sensor.easylevelrv_neigung_x");
+  assert.equal(cfg.entities.yaw, "");
   assert.equal(cfg.geometry.wheelbase_mm, 2000);
+  assert.equal(cfg.display.mode, "rv_top");
   assert.equal(cfg.display.max_tilt_deg, 5);
   assert.equal(cfg.display.dot_boundary_radius_ratio, 0.112);
   assert.equal(cfg.display.dot_size_ratio, 0.068);
   assert.equal(cfg.display.text_size_mode, "auto");
+  assert.equal(cfg.orientation.invert_yaw, false);
+  assert.equal(cfg.orientation.yaw_offset_deg, 0);
   assert.equal(cfg.orientation.swap_axes, false);
+});
+
+test("normalizeConfig keeps backward-compatible rv_top defaults when mode missing", () => {
+  const runtime = loadRuntime();
+  const cfg = runtime.api.normalizeConfig({
+    type: "custom:wit-ha-lovelace-card",
+    display: {
+      max_tilt_deg: 7,
+      text_size_mode: "small",
+    },
+  });
+  assert.equal(cfg.display.mode, "rv_top");
+  assert.equal(cfg.display.max_tilt_deg, 7);
+  assert.equal(cfg.display.text_size_mode, "small");
+});
+
+test("normalizeConfig validates display mode and yaw-related orientation fields", () => {
+  const runtime = loadRuntime();
+  const good = runtime.api.normalizeConfig({
+    type: "custom:wit-ha-lovelace-card",
+    display: { mode: "round_compass" },
+    entities: { yaw: "sensor.yaw" },
+    orientation: {
+      invert_yaw: true,
+      yaw_offset_deg: 400,
+    },
+  });
+  assert.equal(good.display.mode, "round_compass");
+  assert.equal(good.entities.yaw, "sensor.yaw");
+  assert.equal(good.orientation.invert_yaw, true);
+  assert.equal(good.orientation.yaw_offset_deg, 360);
+
+  const bad = runtime.api.normalizeConfig({
+    type: "custom:wit-ha-lovelace-card",
+    display: { mode: "other_mode" },
+    orientation: { yaw_offset_deg: -999 },
+  });
+  assert.equal(bad.display.mode, "rv_top");
+  assert.equal(bad.orientation.yaw_offset_deg, -360);
 });
 
 test("normalizeConfig keeps valid text_size_mode and falls back for invalid values", () => {
@@ -238,6 +281,87 @@ test("resolvePitchRoll respects swap and inversion flags", () => {
   assert.equal(result.valid, true);
   assert.equal(result.pitch, 2.0);
   assert.equal(result.roll, 1.5);
+});
+
+test("normalize360 wraps negative and oversized angles", () => {
+  const runtime = loadRuntime();
+  assert.equal(runtime.api.normalize360(0), 0);
+  assert.equal(runtime.api.normalize360(361), 1);
+  assert.equal(runtime.api.normalize360(-1), 359);
+  assert.ok(Math.abs(runtime.api.normalize360(725.2) - 5.2) < 1e-9);
+});
+
+test("round_compass model keeps bubble valid when yaw is unavailable", () => {
+  const runtime = loadRuntime();
+  const CardClass = runtime.registry.get("wit-ha-lovelace-card");
+  const card = new CardClass();
+  card._config = runtime.api.normalizeConfig({
+    type: "custom:wit-ha-lovelace-card",
+    display: { mode: "round_compass", max_tilt_deg: 5 },
+    entities: {
+      pitch: "sensor.pitch",
+      roll: "sensor.roll",
+      yaw: "sensor.yaw",
+    },
+  });
+  card._hass = {
+    states: {
+      "sensor.pitch": { state: "1.5" },
+      "sensor.roll": { state: "-2.0" },
+      "sensor.yaw": { state: "unavailable" },
+    },
+  };
+  const model = card._buildModel();
+  assert.equal(model.valid, true);
+  assert.equal(model.yawAvailable, false);
+  assert.ok(Math.abs(model.ringRotationDeg) < 1e-9);
+  assert.notEqual(model.dotNx, 0);
+});
+
+test("round_compass ring rotation uses negative heading", () => {
+  const runtime = loadRuntime();
+  const CardClass = runtime.registry.get("wit-ha-lovelace-card");
+  const card = new CardClass();
+  card._config = runtime.api.normalizeConfig({
+    type: "custom:wit-ha-lovelace-card",
+    display: { mode: "round_compass" },
+    entities: {
+      pitch: "sensor.pitch",
+      roll: "sensor.roll",
+      yaw: "sensor.yaw",
+    },
+    orientation: {
+      invert_yaw: false,
+      yaw_offset_deg: 10,
+    },
+  });
+  card._hass = {
+    states: {
+      "sensor.pitch": { state: "0" },
+      "sensor.roll": { state: "0" },
+      "sensor.yaw": { state: "25" },
+    },
+  };
+  const model = card._buildModel();
+  assert.equal(model.heading, 35);
+  assert.equal(model.ringRotationDeg, -35);
+});
+
+test("setConfig forces DOM rebuild on display mode switch", () => {
+  const runtime = loadRuntime();
+  const CardClass = runtime.registry.get("wit-ha-lovelace-card");
+  const card = new CardClass();
+  card._render = () => {};
+  card._domReady = true;
+  card._nodes = { wrapper: {}, mode: "rv_top" };
+  card._currentMode = "rv_top";
+
+  card.setConfig({
+    type: "custom:wit-ha-lovelace-card",
+    display: { mode: "round_compass" },
+  });
+  assert.equal(card._domReady, false);
+  assert.equal(card._currentMode, "round_compass");
 });
 
 test("readNumericState returns null for unavailable", () => {

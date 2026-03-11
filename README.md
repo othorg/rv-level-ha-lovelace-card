@@ -1,20 +1,25 @@
 # WIT HA Lovelace Card
 
-Custom Lovelace card for Home Assistant to visualize RV leveling based on WIT tilt sensor data (pitch/roll), including corner raise guidance and key telemetry values.
+Custom Lovelace card for Home Assistant to visualize WIT orientation data with two display modes:
+- `rv_top`: RV leveling top-view with corner raise guidance
+- `round_compass`: circular level target + rotating compass ring
 
 ## Status
 
-This is the initial MVP (`0.1.0`) focused on visualization and editor-based configuration.
+Current release line: `0.2.x` with dual visualization modes and full editor-based configuration.
 
 Planned next step: dedicated Home Assistant integration for WT901WIFI/WIT data source.
 
-## Features (MVP)
+## Features
 
-- RV top-view visualization similar to your current dashboard style
+- Two display modes:
+  - `rv_top` (existing RV top visualization)
+  - `round_compass` (new circular level + compass ring)
 - Frontend configuration via Lovelace card editor (no mandatory YAML mapping)
 - Configurable entities:
   - pitch
   - roll
+  - yaw
   - temperature
   - battery SoC
 - Configurable geometry:
@@ -32,6 +37,8 @@ Planned next step: dedicated Home Assistant integration for WT901WIFI/WIT data s
   - swap X/Y
   - invert pitch
   - invert roll
+  - invert yaw
+  - yaw offset
 - Click on values opens Home Assistant more-info
 - German/English UI (German for `de*`, English for all other locales)
 
@@ -65,6 +72,7 @@ title: Flair 920 - Wasserwaage
 entities:
   pitch: sensor.easylevelrv_neigung_x
   roll: sensor.easylevelrv_neigung_y
+  yaw: sensor.wit_901_wifi_00008241_yaw
   temperature: sensor.easylevelrv_temperatur
   battery_soc: sensor.easylevelrv_batterie
 geometry:
@@ -72,6 +80,7 @@ geometry:
   track_front_mm: 1723
   track_rear_mm: 1661
 display:
+  mode: round_compass
   max_tilt_deg: 5
   level_tolerance_cm: 0.1
   dot_boundary_radius_ratio: 0.112
@@ -81,6 +90,8 @@ orientation:
   swap_axes: false
   invert_pitch: false
   invert_roll: false
+  invert_yaw: false
+  yaw_offset_deg: 0
 ```
 
 ## Development
