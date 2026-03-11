@@ -9,6 +9,12 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.2.6] - 2026-03-11
+
+### Changed
+- Branding assets renamed from `wit-*` to `rv-level-*` for icon/top-view fallback files.
+- Added generated PNG branding set in `brand/` and mirrored icon/logo PNGs in `dist/`.
+
 ## [0.2.5] - 2026-03-11
 
 ### Added

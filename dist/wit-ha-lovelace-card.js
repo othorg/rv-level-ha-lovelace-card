@@ -1,6 +1,6 @@
 const CARD_TYPE = "wit-ha-lovelace-card";
 const CARD_NAME = "RV Level Lovelace Card";
-const CARD_VERSION = "0.2.5";
+const CARD_VERSION = "0.2.6";
 
 const DEFAULT_GEOMETRY = {
   wheelbase_mm: 2000,
@@ -272,17 +272,21 @@ const DEFAULT_IMAGE_CANDIDATES = uniq([
   "/hacsfiles/wit-ha-lovelace-card/rv_top_flair.png",
   "/local/community/wit-ha-lovelace-card/rv_top_flair.png",
   "/local/wit-ha-lovelace-card/rv_top_flair.png",
-  SCRIPT_BASE ? `${SCRIPT_BASE}/wit-rv-top.svg` : "",
-  "/hacsfiles/wit-ha-lovelace-card/wit-rv-top.svg",
-  "/local/community/wit-ha-lovelace-card/wit-rv-top.svg",
-  "/local/wit-ha-lovelace-card/wit-rv-top.svg",
+  SCRIPT_BASE ? `${SCRIPT_BASE}/rv-level-rv-top.svg` : "",
+  "/hacsfiles/wit-ha-lovelace-card/rv-level-rv-top.svg",
+  "/local/community/wit-ha-lovelace-card/rv-level-rv-top.svg",
+  "/local/wit-ha-lovelace-card/rv-level-rv-top.svg",
 ]);
 
 const DEFAULT_ICON_CANDIDATES = uniq([
-  SCRIPT_BASE ? `${SCRIPT_BASE}/wit-icon.svg` : "",
-  "/hacsfiles/wit-ha-lovelace-card/wit-icon.svg",
-  "/local/community/wit-ha-lovelace-card/wit-icon.svg",
-  "/local/wit-ha-lovelace-card/wit-icon.svg",
+  SCRIPT_BASE ? `${SCRIPT_BASE}/rv-level-icon.svg` : "",
+  SCRIPT_BASE ? `${SCRIPT_BASE}/rv-level-icon.png` : "",
+  "/hacsfiles/wit-ha-lovelace-card/rv-level-icon.svg",
+  "/hacsfiles/wit-ha-lovelace-card/rv-level-icon.png",
+  "/local/community/wit-ha-lovelace-card/rv-level-icon.svg",
+  "/local/community/wit-ha-lovelace-card/rv-level-icon.png",
+  "/local/wit-ha-lovelace-card/rv-level-icon.svg",
+  "/local/wit-ha-lovelace-card/rv-level-icon.png",
 ]);
 
 function resolveLanguage(hass) {

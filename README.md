@@ -160,6 +160,7 @@ To publish updates so HACS can reliably detect new versions:
 ## Assets
 
 - Base image: `assets/rv_top_flair.png`
-- Icon: `assets/wit-icon.svg`
+- Icon: `assets/rv-level-icon.svg`
+- Branding PNGs: `brand/rv-level-icon*.png`, `brand/rv-level-logo*.png`, `brand/rv-level-logo-dark*.png`
 
 Mirrored files for HACS resource use are available in `dist/`.
