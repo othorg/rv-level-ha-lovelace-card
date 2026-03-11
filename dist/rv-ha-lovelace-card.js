@@ -1,6 +1,6 @@
 const CARD_TYPE = "rv-ha-lovelace-card";
 const CARD_NAME = "RV Level Lovelace Card";
-const CARD_VERSION = "0.3.4";
+const CARD_VERSION = "0.3.5";
 
 const DEFAULT_GEOMETRY = {
   wheelbase_mm: 2000,
@@ -726,12 +726,6 @@ class WitHaLovelaceCard extends HTMLElement {
   getCardSize() {
     const width = this.offsetWidth || this.getBoundingClientRect().width || 0;
     if (!width) return 8;
-    if (this._config?.display?.mode === "round_compass") {
-      const compassHeight = width;
-      const valuePanelHeight = 130;
-      const headerHeight = 56;
-      return Math.max(8, Math.ceil((compassHeight + valuePanelHeight + headerHeight) / 50));
-    }
     const bodyHeight = (width * 6) / 5;
     const headerHeight = 56;
     return Math.max(8, Math.ceil((bodyHeight + headerHeight) / 50));
@@ -1474,9 +1468,12 @@ class WitHaLovelaceCard extends HTMLElement {
           position: relative;
           background: #9bc4d6;
           border-radius: 16px;
-          padding: 14px 12px 14px;
+          padding: 12px 10px 10px;
           box-sizing: border-box;
           overflow: hidden;
+          aspect-ratio: 5 / 6;
+          display: flex;
+          flex-direction: column;
         }
         .round-bg {
           position: absolute;
@@ -1491,6 +1488,10 @@ class WitHaLovelaceCard extends HTMLElement {
           position: relative;
           z-index: 2;
           transform-origin: 50% 50%;
+          flex: 1;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
         }
         .round-head {
           position: relative;
@@ -1498,7 +1499,7 @@ class WitHaLovelaceCard extends HTMLElement {
           grid-template-columns: 1fr 1fr;
           align-items: center;
           gap: 8px;
-          margin-bottom: 10px;
+          margin-bottom: 6px;
           min-height: 32px;
         }
         .head-value {
@@ -1546,9 +1547,10 @@ class WitHaLovelaceCard extends HTMLElement {
         .clickable { cursor: pointer; }
         .compass-wrapper {
           position: relative;
-          width: min(100%, 540px);
+          width: min(100%, 73%);
           margin: 0 auto;
           aspect-ratio: 1 / 1;
+          flex: 0 0 auto;
         }
         .ring-rotor {
           position: absolute;
@@ -1624,9 +1626,9 @@ class WitHaLovelaceCard extends HTMLElement {
           clip-path: circle(50% at 50% 50%);
         }
         .value-panel {
-          margin-top: 12px;
+          margin-top: 8px;
           border-top: 1px solid rgba(172,180,203,0.22);
-          padding-top: 10px;
+          padding-top: 6px;
           font-family: Arial, sans-serif;
         }
         .value-panel.shift-down {
@@ -1636,10 +1638,10 @@ class WitHaLovelaceCard extends HTMLElement {
           display: grid;
           grid-template-columns: 1fr auto;
           align-items: center;
-          padding: 8px 4px;
+          padding: 6px 4px;
           color: #111;
           border-bottom: 1px solid rgba(172,180,203,0.12);
-          font-size: 18px;
+          font-size: 16px;
           line-height: 1.2;
         }
         .value-row:last-child { border-bottom: 0; }
@@ -1650,19 +1652,19 @@ class WitHaLovelaceCard extends HTMLElement {
           opacity: 0.98;
         }
         .status-row {
-          margin-top: 8px;
+          margin-top: 6px;
           font-family: Arial, sans-serif;
           color: #111;
-          font-size: 13px;
+          font-size: 12px;
           text-align: center;
-          min-height: 18px;
+          min-height: 14px;
           line-height: 1.2;
         }
         .corner-grid {
-          margin-top: 10px;
+          margin-top: 6px;
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 6px 10px;
+          gap: 4px 8px;
           font-family: Arial, sans-serif;
         }
         .corner-cell {
@@ -1672,10 +1674,10 @@ class WitHaLovelaceCard extends HTMLElement {
           align-items: center;
           min-width: 0;
           color: #111;
-          font-size: 14px;
+          font-size: 13px;
           border: 1px solid rgba(0,0,0,0.12);
           border-radius: 8px;
-          padding: 4px 6px;
+          padding: 3px 6px;
           background: rgba(255,255,255,0.28);
         }
         .corner-cell .corner-key { font-weight: 600; opacity: 0.9; }

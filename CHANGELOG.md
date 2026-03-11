@@ -9,6 +9,14 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.3.5] - 2026-03-11
+
+### Changed
+- Unified card outer sizing across both display modes:
+  - `round_compass` now uses the same outer aspect ratio as `rv_top` (`5/6`).
+  - `getCardSize()` now follows one shared sizing path for both modes.
+- Refined `round_compass` internal spacing and scaling so compass/value/corner/status sections fit cleanly inside the unified outer card dimensions.
+
 ## [0.3.4] - 2026-03-11
 
 ### Changed
