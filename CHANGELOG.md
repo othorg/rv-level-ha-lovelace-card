@@ -7,7 +7,7 @@ All notable changes to this project are documented in this file and in GitHub Re
 ## [Unreleased]
 
 ### Changed
-- No changes yet.
+- README preview image now points to `assets/rv-compass-spirit-level.png`.
 
 ## [0.2.10] - 2026-03-11
 
