@@ -9,6 +9,14 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.2.8] - 2026-03-11
+
+### Fixed
+- `show_corner_values` now fully hides corner visualization containers in both display modes (not only corner text values).
+
+### Changed
+- README is now consistently English in the leveling interpretation section.
+
 ## [0.2.7] - 2026-03-11
 
 ### Changed

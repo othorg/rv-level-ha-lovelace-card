@@ -1,6 +1,6 @@
 const CARD_TYPE = "wit-ha-lovelace-card";
 const CARD_NAME = "RV Level Lovelace Card";
-const CARD_VERSION = "0.2.7";
+const CARD_VERSION = "0.2.8";
 
 const DEFAULT_GEOMETRY = {
   wheelbase_mm: 2000,
@@ -1685,8 +1685,10 @@ class WitHaLovelaceCard extends HTMLElement {
       const showCornerBlock = this._config.display.show_corner_values;
       if (markerNode?.parentElement) {
         markerNode.parentElement.hidden = !showCornerBlock;
+        markerNode.parentElement.style.display = showCornerBlock ? "" : "none";
       }
       valueNode.hidden = !showCornerBlock;
+      valueNode.style.display = showCornerBlock ? "" : "none";
       if (!showCornerBlock) return;
 
       markerNode.className = "marker";
@@ -1827,8 +1829,10 @@ class WitHaLovelaceCard extends HTMLElement {
         ? this._config.display.level_ok_color
         : this._config.display.raise_color;
     };
-    this._nodes.cornerGrid.hidden = !this._config.display.show_corner_values;
-    if (this._config.display.show_corner_values) {
+    const showCornerGrid = this._config.display.show_corner_values;
+    this._nodes.cornerGrid.hidden = !showCornerGrid;
+    this._nodes.cornerGrid.style.display = showCornerGrid ? "grid" : "none";
+    if (showCornerGrid) {
       applyCornerCell(this._nodes.cornerFL, model.corners.fl);
       applyCornerCell(this._nodes.cornerFR, model.corners.fr);
       applyCornerCell(this._nodes.cornerRL, model.corners.rl);

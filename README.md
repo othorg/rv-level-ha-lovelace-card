@@ -50,6 +50,28 @@ Current release line: `0.2.x` with dual visualization modes and full editor-base
 - Click on values opens Home Assistant more-info
 - German/English UI (German for `de*`, English for all other locales)
 
+## Leveling values interpretation (important)
+
+The card shows two different value types:
+
+- **Angle values** (`AngleX`, `AngleY`, optional `AngleZ`)
+  - These can be **positive or negative**.
+  - The sign depends on sensor orientation and your mapping options (`swap_axes`, `invert_pitch`, `invert_roll`, `invert_yaw`).
+- **Leveling points** (`FL`, `FR`, `RL`, `RR` in cm)
+  - These values are **always >= 0** in the card (no negative cm values).
+  - Meaning: **how much to raise** (in cm) to match the lowest reference level.
+
+Color logic for leveling points:
+
+- **Green**: point is within tolerance (`level_tolerance_cm`)
+- **Red**: point is outside tolerance and needs raising
+
+Important behavior notes:
+
+- A **red point with a positive value** means this corner needs to be raised by that amount.
+- Leveling points intentionally have **no negative values** (the card shows raise demand, not lowering demand).
+- The `raise_*` mapping intentionally follows the existing EasyLevel YAML-compatible logic.
+
 ## Sensor placement & orientation (vehicle)
 
 For reliable leveling values, sensor placement matters more than card settings.
@@ -97,7 +119,7 @@ If needed, add manually:
 
 ```yaml
 type: custom:wit-ha-lovelace-card
-title: Flair 920 - Wasserwaage
+title: Flair 920 - Level
 entities:
   pitch: sensor.easylevelrv_neigung_x
   roll: sensor.easylevelrv_neigung_y
