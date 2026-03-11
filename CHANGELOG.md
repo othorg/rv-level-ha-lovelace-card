@@ -9,6 +9,16 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.3.3] - 2026-03-11
+
+### Changed
+- Color configuration now supports both picker and direct text entry per color value.
+- Added per-color `No color` option in the editor, allowing explicit transparent/empty color values.
+- `round_compass`: disabling `show_corner_values` now hides the full corner block including symbols (dots/arrows) and values.
+
+### Tests
+- Added coverage for empty/no-color values in `normalizeConfig`.
+
 ## [0.3.2] - 2026-03-11
 
 ### Changed

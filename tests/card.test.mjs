@@ -322,6 +322,21 @@ test("normalizeConfig sanitizes invalid color strings", () => {
   assert.equal(cfg.display.dot_color, "#00ff00");
 });
 
+test("normalizeConfig keeps empty color values as no-color", () => {
+  const runtime = loadRuntime();
+  const cfg = runtime.api.normalizeConfig({
+    type: "custom:rv-ha-lovelace-card",
+    display: {
+      level_highlight_color: "",
+      ring_tick_color: "",
+      text_color: "",
+    },
+  });
+  assert.equal(cfg.display.level_highlight_color, "");
+  assert.equal(cfg.display.ring_tick_color, "");
+  assert.equal(cfg.display.text_color, "");
+});
+
 test("shortestAngleDelta follows shortest path across wrap", () => {
   const runtime = loadRuntime();
   assert.equal(runtime.api.shortestAngleDelta(359, 1), 2);

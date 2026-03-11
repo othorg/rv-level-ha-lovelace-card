@@ -1,6 +1,6 @@
 const CARD_TYPE = "rv-ha-lovelace-card";
 const CARD_NAME = "RV Level Lovelace Card";
-const CARD_VERSION = "0.3.2";
+const CARD_VERSION = "0.3.3";
 
 const DEFAULT_GEOMETRY = {
   wheelbase_mm: 2000,
@@ -99,6 +99,7 @@ const I18N = {
     raise_color: "Anheben-Farbe",
     text_color: "Schriftfarbe",
     show_compass_status: "Kompass-Status anzeigen",
+    no_color: "Keine Farbe",
     compass_unreliable_tilt_deg: "Tilt-Grenze fuer Kompass-Hinweis (Grad)",
     smooth_alpha: "Glaettung (0-1)",
     text_size_mode: "Schriftgroesse",
@@ -169,6 +170,7 @@ const I18N = {
     raise_color: "Raise-needed color",
     text_color: "Text color",
     show_compass_status: "Show compass status",
+    no_color: "No color",
     compass_unreliable_tilt_deg: "Tilt limit for compass hint (deg)",
     smooth_alpha: "Smoothing (0-1)",
     text_size_mode: "Text size",
@@ -307,6 +309,12 @@ function sanitizeCssColor(value, fallback) {
   return fallback;
 }
 
+function sanitizeOptionalCssColor(value, fallback) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  return sanitizeCssColor(raw, fallback);
+}
+
 function clampNumber(value, min, max, fallback) {
   const num = Number(value);
   if (!Number.isFinite(num)) return fallback;
@@ -385,21 +393,21 @@ function normalizeConfig(config) {
     DEFAULT_DISPLAY.compass_unreliable_tilt_deg,
   );
   normalized.display.smooth_alpha = clampNumber(normalized.display.smooth_alpha, 0.01, 1, DEFAULT_DISPLAY.smooth_alpha);
-  normalized.display.background_color = sanitizeCssColor(normalized.display.background_color, DEFAULT_DISPLAY.background_color);
-  normalized.display.level_gradient_start = sanitizeCssColor(normalized.display.level_gradient_start, DEFAULT_DISPLAY.level_gradient_start);
-  normalized.display.level_gradient_mid = sanitizeCssColor(normalized.display.level_gradient_mid, DEFAULT_DISPLAY.level_gradient_mid);
-  normalized.display.level_gradient_end = sanitizeCssColor(normalized.display.level_gradient_end, DEFAULT_DISPLAY.level_gradient_end);
-  normalized.display.level_highlight_color = sanitizeCssColor(normalized.display.level_highlight_color, DEFAULT_DISPLAY.level_highlight_color);
-  normalized.display.crosshair_color = sanitizeCssColor(normalized.display.crosshair_color, DEFAULT_DISPLAY.crosshair_color);
-  normalized.display.ring_background_color = sanitizeCssColor(normalized.display.ring_background_color, DEFAULT_DISPLAY.ring_background_color);
-  normalized.display.ring_tick_color = sanitizeCssColor(normalized.display.ring_tick_color, DEFAULT_DISPLAY.ring_tick_color);
-  normalized.display.ring_major_tick_color = sanitizeCssColor(normalized.display.ring_major_tick_color, DEFAULT_DISPLAY.ring_major_tick_color);
-  normalized.display.ring_cardinal_color = sanitizeCssColor(normalized.display.ring_cardinal_color, DEFAULT_DISPLAY.ring_cardinal_color);
-  normalized.display.dot_color = sanitizeCssColor(normalized.display.dot_color, DEFAULT_DISPLAY.dot_color);
-  normalized.display.dot_border_color = sanitizeCssColor(normalized.display.dot_border_color, DEFAULT_DISPLAY.dot_border_color);
-  normalized.display.level_ok_color = sanitizeCssColor(normalized.display.level_ok_color, DEFAULT_DISPLAY.level_ok_color);
-  normalized.display.raise_color = sanitizeCssColor(normalized.display.raise_color, DEFAULT_DISPLAY.raise_color);
-  normalized.display.text_color = sanitizeCssColor(normalized.display.text_color, DEFAULT_DISPLAY.text_color);
+  normalized.display.background_color = sanitizeOptionalCssColor(normalized.display.background_color, DEFAULT_DISPLAY.background_color);
+  normalized.display.level_gradient_start = sanitizeOptionalCssColor(normalized.display.level_gradient_start, DEFAULT_DISPLAY.level_gradient_start);
+  normalized.display.level_gradient_mid = sanitizeOptionalCssColor(normalized.display.level_gradient_mid, DEFAULT_DISPLAY.level_gradient_mid);
+  normalized.display.level_gradient_end = sanitizeOptionalCssColor(normalized.display.level_gradient_end, DEFAULT_DISPLAY.level_gradient_end);
+  normalized.display.level_highlight_color = sanitizeOptionalCssColor(normalized.display.level_highlight_color, DEFAULT_DISPLAY.level_highlight_color);
+  normalized.display.crosshair_color = sanitizeOptionalCssColor(normalized.display.crosshair_color, DEFAULT_DISPLAY.crosshair_color);
+  normalized.display.ring_background_color = sanitizeOptionalCssColor(normalized.display.ring_background_color, DEFAULT_DISPLAY.ring_background_color);
+  normalized.display.ring_tick_color = sanitizeOptionalCssColor(normalized.display.ring_tick_color, DEFAULT_DISPLAY.ring_tick_color);
+  normalized.display.ring_major_tick_color = sanitizeOptionalCssColor(normalized.display.ring_major_tick_color, DEFAULT_DISPLAY.ring_major_tick_color);
+  normalized.display.ring_cardinal_color = sanitizeOptionalCssColor(normalized.display.ring_cardinal_color, DEFAULT_DISPLAY.ring_cardinal_color);
+  normalized.display.dot_color = sanitizeOptionalCssColor(normalized.display.dot_color, DEFAULT_DISPLAY.dot_color);
+  normalized.display.dot_border_color = sanitizeOptionalCssColor(normalized.display.dot_border_color, DEFAULT_DISPLAY.dot_border_color);
+  normalized.display.level_ok_color = sanitizeOptionalCssColor(normalized.display.level_ok_color, DEFAULT_DISPLAY.level_ok_color);
+  normalized.display.raise_color = sanitizeOptionalCssColor(normalized.display.raise_color, DEFAULT_DISPLAY.raise_color);
+  normalized.display.text_color = sanitizeOptionalCssColor(normalized.display.text_color, DEFAULT_DISPLAY.text_color);
 
   normalized.orientation.swap_axes = Boolean(normalized.orientation.swap_axes);
   normalized.orientation.invert_pitch = Boolean(normalized.orientation.invert_pitch);
@@ -735,6 +743,11 @@ class WitHaLovelaceCard extends HTMLElement {
 
   _t(key) {
     return t(this._lang(), key);
+  }
+
+  _displayColor(key, fallback = "transparent") {
+    const value = String(this._config?.display?.[key] ?? "").trim();
+    return value || fallback;
   }
 
   _emitMoreInfo(entityId) {
@@ -1304,10 +1317,10 @@ class WitHaLovelaceCard extends HTMLElement {
   }
 
   _buildCompassRingSvg() {
-    const ringBg = escapeHtml(this._config.display.ring_background_color);
-    const tick = escapeHtml(this._config.display.ring_tick_color);
-    const majorTick = escapeHtml(this._config.display.ring_major_tick_color);
-    const cardinalColor = escapeHtml(this._config.display.ring_cardinal_color);
+    const ringBg = escapeHtml(this._displayColor("ring_background_color"));
+    const tick = escapeHtml(this._displayColor("ring_tick_color"));
+    const majorTick = escapeHtml(this._displayColor("ring_major_tick_color"));
+    const cardinalColor = escapeHtml(this._displayColor("ring_cardinal_color"));
     const ticks = [];
     const labels = [];
     for (let deg = 0; deg < 360; deg += 5) {
@@ -1349,8 +1362,8 @@ class WitHaLovelaceCard extends HTMLElement {
   }
 
   _buildRvTopSvg() {
-    const stroke = escapeHtml(this._config.display.text_color);
-    const dimStroke = escapeHtml(sanitizeCssColor(this._config.display.text_color, "#111111"));
+    const stroke = escapeHtml(this._displayColor("text_color"));
+    const dimStroke = escapeHtml(this._displayColor("text_color"));
     return `
       <svg viewBox="0 0 100 150" role="img" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -1819,13 +1832,23 @@ class WitHaLovelaceCard extends HTMLElement {
     const anglePx = clampInt(18 * scale, 12, 28);
     const angleLabelPx = clampInt(11 * scale, 9, 15);
     const wheelValuePx = clampInt(12 * scale, 9, 16);
+    const textColor = this._displayColor("text_color");
+    const levelOkColor = this._displayColor("level_ok_color");
+    const raiseColor = this._displayColor("raise_color");
+    const levelHighlightColor = this._displayColor("level_highlight_color");
+    const levelStartColor = this._displayColor("level_gradient_start");
+    const levelMidColor = this._displayColor("level_gradient_mid");
+    const levelEndColor = this._displayColor("level_gradient_end");
+    const dotColor = this._displayColor("dot_color");
+    const dotBorderColor = this._displayColor("dot_border_color");
+    const crosshairColor = this._displayColor("crosshair_color");
 
-    this._nodes.wrapper.style.background = this._config.display.background_color;
+    this._nodes.wrapper.style.background = this._displayColor("background_color");
 
     this._nodes.title.textContent = title;
     this._nodes.title.hidden = !title;
     this._nodes.title.style.fontSize = `${titlePx}px`;
-    this._nodes.title.style.color = this._config.display.text_color;
+    this._nodes.title.style.color = textColor;
 
     this._nodes.temp.hidden = !this._config.display.show_temperature;
     this._nodes.batt.hidden = !this._config.display.show_battery;
@@ -1833,8 +1856,8 @@ class WitHaLovelaceCard extends HTMLElement {
     this._nodes.battText.textContent = model.battText;
     this._nodes.temp.style.fontSize = `${infoPx}px`;
     this._nodes.batt.style.fontSize = `${infoPx}px`;
-    this._nodes.temp.style.color = this._config.display.text_color;
-    this._nodes.batt.style.color = this._config.display.text_color;
+    this._nodes.temp.style.color = textColor;
+    this._nodes.batt.style.color = textColor;
 
     const showCorners = this._config.display.show_corner_values;
     const applyWheel = (dotNode, valNode, corner) => {
@@ -1842,12 +1865,12 @@ class WitHaLovelaceCard extends HTMLElement {
       if (!showCorners) return;
       dotNode.classList.toggle("needs-raise", !corner.levelOk);
       dotNode.style.background = corner.levelOk
-        ? this._config.display.level_ok_color
-        : this._config.display.raise_color;
+        ? levelOkColor
+        : raiseColor;
       const value = corner.raise === null ? 0 : corner.raise;
       valNode.textContent = `${fmtOne(value)} ${this._t("unit_cm")}`;
       valNode.style.fontSize = `${wheelValuePx}px`;
-      valNode.style.color = this._config.display.text_color;
+      valNode.style.color = textColor;
     };
     applyWheel(this._nodes.wheelDotFL, this._nodes.wheelValFL, model.corners.fl);
     applyWheel(this._nodes.wheelDotFR, this._nodes.wheelValFR, model.corners.fr);
@@ -1857,13 +1880,13 @@ class WitHaLovelaceCard extends HTMLElement {
     this._nodes.miniRingRotor.hidden = !this._config.display.show_compass_ring;
     this._nodes.miniCompassIndex.hidden = !this._config.display.show_compass_ring;
     this._nodes.miniLevelCircle.style.background = `
-      radial-gradient(circle at 50% 36%, ${this._config.display.level_highlight_color}, rgba(255,255,255,0) 35%),
-      radial-gradient(circle at 50% 50%, ${this._config.display.level_gradient_start} 0%, ${this._config.display.level_gradient_mid} 46%, ${this._config.display.level_gradient_end} 100%)
+      radial-gradient(circle at 50% 36%, ${levelHighlightColor}, rgba(255,255,255,0) 35%),
+      radial-gradient(circle at 50% 50%, ${levelStartColor} 0%, ${levelMidColor} 46%, ${levelEndColor} 100%)
     `;
-    this._nodes.miniDot.style.background = this._config.display.dot_color;
-    this._nodes.miniDot.style.borderColor = this._config.display.dot_border_color;
+    this._nodes.miniDot.style.background = dotColor;
+    this._nodes.miniDot.style.borderColor = dotBorderColor;
     const miniCrossNodes = this.shadowRoot.querySelectorAll(".mini-cross");
-    for (const node of miniCrossNodes) node.style.background = this._config.display.crosshair_color;
+    for (const node of miniCrossNodes) node.style.background = crosshairColor;
 
     const showAngles = this._config.display.show_angle_panel;
     this._nodes.angleXLabel.parentElement.hidden = !showAngles;
@@ -1875,10 +1898,10 @@ class WitHaLovelaceCard extends HTMLElement {
       this._nodes.angleYLabel.style.fontSize = `${angleLabelPx}px`;
       this._nodes.angleXValue.style.fontSize = `${anglePx}px`;
       this._nodes.angleYValue.style.fontSize = `${anglePx}px`;
-      this._nodes.angleXLabel.style.color = this._config.display.text_color;
-      this._nodes.angleYLabel.style.color = this._config.display.text_color;
-      this._nodes.angleXValue.style.color = this._config.display.text_color;
-      this._nodes.angleYValue.style.color = this._config.display.text_color;
+      this._nodes.angleXLabel.style.color = textColor;
+      this._nodes.angleYLabel.style.color = textColor;
+      this._nodes.angleXValue.style.color = textColor;
+      this._nodes.angleYValue.style.color = textColor;
     }
 
     if (this._config.display.show_compass_status && model.yawAvailable && !model.compassReliable) {
@@ -1888,7 +1911,7 @@ class WitHaLovelaceCard extends HTMLElement {
       this._nodes.compassStatus.textContent = "";
       this._nodes.compassStatus.hidden = true;
     }
-    this._nodes.compassStatus.style.color = this._config.display.text_color;
+    this._nodes.compassStatus.style.color = textColor;
 
     this._renderRvTopDynamic();
     this._startAnimationLoop();
@@ -1938,31 +1961,41 @@ class WitHaLovelaceCard extends HTMLElement {
     const titlePx = clampInt(20 * scale, 13, 30);
     const infoPx = clampInt(14 * scale, 10, 20);
     const valuePx = clampInt(22 * scale, 14, 34);
+    const textColor = this._displayColor("text_color");
+    const levelOkColor = this._displayColor("level_ok_color");
+    const raiseColor = this._displayColor("raise_color");
+    const levelHighlightColor = this._displayColor("level_highlight_color");
+    const levelStartColor = this._displayColor("level_gradient_start");
+    const levelMidColor = this._displayColor("level_gradient_mid");
+    const levelEndColor = this._displayColor("level_gradient_end");
+    const dotColor = this._displayColor("dot_color");
+    const dotBorderColor = this._displayColor("dot_border_color");
+    const crosshairColor = this._displayColor("crosshair_color");
 
     this._nodes.title.textContent = title;
     this._nodes.title.hidden = !title;
     this._nodes.title.style.fontSize = `${titlePx}px`;
-    this._nodes.title.style.color = this._config.display.text_color;
+    this._nodes.title.style.color = textColor;
     this._nodes.temp.hidden = !this._config.display.show_temperature;
     this._nodes.batt.hidden = !this._config.display.show_battery;
     this._nodes.tempText.textContent = this._buildHeadValue(model.tempText);
     this._nodes.battText.textContent = this._buildHeadValue(model.battText);
     this._nodes.temp.style.fontSize = `${infoPx}px`;
     this._nodes.batt.style.fontSize = `${infoPx}px`;
-    this._nodes.temp.style.color = this._config.display.text_color;
-    this._nodes.batt.style.color = this._config.display.text_color;
+    this._nodes.temp.style.color = textColor;
+    this._nodes.batt.style.color = textColor;
     this._nodes.ringRotor.hidden = !this._config.display.show_compass_ring;
     this._nodes.compassIndex.hidden = !this._config.display.show_compass_ring;
     const roundBgUrl = String(this._config.image || "").trim();
     this._nodes.roundBg.hidden = !roundBgUrl;
-    this._nodes.wrapper.style.background = roundBgUrl ? "transparent" : this._config.display.background_color;
+    this._nodes.wrapper.style.background = roundBgUrl ? "transparent" : this._displayColor("background_color");
     if (roundBgUrl) {
       if (this._nodes.roundBg.dataset.src !== roundBgUrl) {
         this._nodes.roundBg.dataset.src = roundBgUrl;
         this._nodes.roundBg.src = roundBgUrl;
         this._nodes.roundBg.onerror = () => {
           this._nodes.roundBg.hidden = true;
-          this._nodes.wrapper.style.background = this._config.display.background_color;
+          this._nodes.wrapper.style.background = this._displayColor("background_color");
         };
       }
       this._nodes.roundBg.alt = this._t("image_alt");
@@ -1997,23 +2030,23 @@ class WitHaLovelaceCard extends HTMLElement {
     this._nodes.angleXValue.style.fontSize = `${valuePx}px`;
     this._nodes.angleYValue.style.fontSize = `${valuePx}px`;
     this._nodes.angleZValue.style.fontSize = `${valuePx}px`;
-    this._nodes.angleXValue.style.color = this._config.display.text_color;
-    this._nodes.angleYValue.style.color = this._config.display.text_color;
-    this._nodes.angleZValue.style.color = this._config.display.text_color;
-    this._nodes.angleXLabel.style.color = this._config.display.text_color;
-    this._nodes.angleYLabel.style.color = this._config.display.text_color;
-    this._nodes.angleZLabel.style.color = this._config.display.text_color;
+    this._nodes.angleXValue.style.color = textColor;
+    this._nodes.angleYValue.style.color = textColor;
+    this._nodes.angleZValue.style.color = textColor;
+    this._nodes.angleXLabel.style.color = textColor;
+    this._nodes.angleYLabel.style.color = textColor;
+    this._nodes.angleZLabel.style.color = textColor;
     this._nodes.valuePanel.hidden = !this._config.display.show_angle_panel;
 
     this._nodes.levelCircle.style.background = `
-      radial-gradient(circle at 50% 36%, ${this._config.display.level_highlight_color}, rgba(255,255,255,0) 35%),
-      radial-gradient(circle at 50% 50%, ${this._config.display.level_gradient_start} 0%, ${this._config.display.level_gradient_mid} 46%, ${this._config.display.level_gradient_end} 100%)
+      radial-gradient(circle at 50% 36%, ${levelHighlightColor}, rgba(255,255,255,0) 35%),
+      radial-gradient(circle at 50% 50%, ${levelStartColor} 0%, ${levelMidColor} 46%, ${levelEndColor} 100%)
     `;
-    this._nodes.dot.style.background = this._config.display.dot_color;
-    this._nodes.dot.style.borderColor = this._config.display.dot_border_color;
+    this._nodes.dot.style.background = dotColor;
+    this._nodes.dot.style.borderColor = dotBorderColor;
 
     const crossNodes = this.shadowRoot.querySelectorAll(".cross");
-    for (const node of crossNodes) node.style.background = this._config.display.crosshair_color;
+    for (const node of crossNodes) node.style.background = crosshairColor;
 
     const applyCornerCell = (cellNode, corner) => {
       if (!cellNode) return;
@@ -2021,17 +2054,38 @@ class WitHaLovelaceCard extends HTMLElement {
       const indicatorNode = cellNode.querySelector(".corner-indicator");
       const value = corner.raise === null ? 0 : corner.raise;
       valueNode.textContent = `${fmtOne(value)} ${this._t("unit_cm")}`;
-      valueNode.style.color = this._config.display.text_color;
+      valueNode.style.color = textColor;
       const keyNode = cellNode.querySelector(".corner-key");
-      keyNode.style.color = this._config.display.text_color;
+      keyNode.style.color = textColor;
       indicatorNode.classList.toggle("needs-raise", !corner.levelOk);
       indicatorNode.style.background = corner.levelOk
-        ? this._config.display.level_ok_color
-        : this._config.display.raise_color;
+        ? levelOkColor
+        : raiseColor;
     };
     const showCornerGrid = this._config.display.show_corner_values;
     this._nodes.cornerGrid.hidden = !showCornerGrid;
     this._nodes.cornerGrid.style.display = showCornerGrid ? "grid" : "none";
+    const cornerCells = [
+      this._nodes.cornerFL,
+      this._nodes.cornerFR,
+      this._nodes.cornerRL,
+      this._nodes.cornerRR,
+    ];
+    for (const cell of cornerCells) {
+      if (!cell) continue;
+      cell.hidden = !showCornerGrid;
+      cell.style.display = showCornerGrid ? "grid" : "none";
+      const valueNode = cell.querySelector(".corner-value");
+      const indicatorNode = cell.querySelector(".corner-indicator");
+      if (valueNode) {
+        valueNode.hidden = !showCornerGrid;
+        valueNode.style.display = showCornerGrid ? "" : "none";
+      }
+      if (indicatorNode) {
+        indicatorNode.hidden = !showCornerGrid;
+        indicatorNode.style.display = showCornerGrid ? "block" : "none";
+      }
+    }
     if (showCornerGrid) {
       applyCornerCell(this._nodes.cornerFL, model.corners.fl);
       applyCornerCell(this._nodes.cornerFR, model.corners.fr);
@@ -2050,7 +2104,7 @@ class WitHaLovelaceCard extends HTMLElement {
       this._nodes.compassStatus.textContent = "";
       this._nodes.compassStatus.hidden = true;
     }
-    this._nodes.compassStatus.style.color = this._config.display.text_color;
+    this._nodes.compassStatus.style.color = textColor;
 
     this._renderRoundDynamic();
     this._startAnimationLoop();
@@ -2186,6 +2240,7 @@ class WitHaLovelaceCardEditor extends HTMLElement {
       raise_color: asColorInputValue(c.display.raise_color, DEFAULT_DISPLAY.raise_color),
       text_color: asColorInputValue(c.display.text_color, DEFAULT_DISPLAY.text_color),
     };
+    const colorText = {};
     const colorOrder = [
       "background_color",
       "text_color",
@@ -2203,12 +2258,30 @@ class WitHaLovelaceCardEditor extends HTMLElement {
       "level_ok_color",
       "raise_color",
     ];
+    const colorNone = {};
+    for (const id of colorOrder) {
+      colorNone[id] = String(c.display?.[id] ?? "").trim() === "";
+      colorText[id] = String(c.display?.[id] ?? "").trim();
+    }
     const colorTile = (id) => `
       <label class="color-item" for="${id}">
         <span class="color-name">${escapeHtml(this._t(id))}</span>
         <span class="color-control">
-          <input id="${id}" data-group="display" type="color" value="${escapeHtml(color[id])}" />
-          <span class="color-code">${escapeHtml(String(color[id]).toUpperCase())}</span>
+          <input id="${id}" data-group="display" type="color" value="${escapeHtml(color[id])}" ${colorNone[id] ? "disabled" : ""} />
+          <input
+            id="${id}__hex"
+            data-group="display"
+            data-color-key="${id}"
+            class="color-hex-input"
+            type="text"
+            placeholder="#RRGGBB"
+            value="${escapeHtml(colorText[id] || String(color[id]).toUpperCase())}"
+            ${colorNone[id] ? "disabled" : ""}
+          />
+        </span>
+        <span class="none-row">
+          <input id="${id}__none" data-group="display" data-color-key="${id}" type="checkbox" ${colorNone[id] ? "checked" : ""} />
+          <span>${escapeHtml(this._t("no_color"))}</span>
         </span>
       </label>
     `;
@@ -2271,18 +2344,27 @@ class WitHaLovelaceCardEditor extends HTMLElement {
           gap: 8px;
           align-items: center;
         }
-        .color-code {
+        .color-hex-input {
           font-size: 12px;
-          color: #555;
+          color: #333;
           font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
           letter-spacing: 0.02em;
           background: #fff;
           border: 1px solid #d2d2d2;
           border-radius: 6px;
-          padding: 6px 8px;
+          padding: 7px 8px;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          width: 100%;
+          box-sizing: border-box;
+        }
+        .none-row {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 12px;
+          color: #555;
         }
       </style>
       <div class="grid">
@@ -2404,6 +2486,24 @@ class WitHaLovelaceCardEditor extends HTMLElement {
 
     const group = String(target?.dataset?.group || "");
     if (!group) return;
+
+    const colorKey = String(target?.dataset?.colorKey || "");
+    if (target.type === "checkbox" && colorKey) {
+      if (target.checked) {
+        next[group][colorKey] = "";
+      } else {
+        const colorInput = this.shadowRoot?.querySelector?.(`#${colorKey}`);
+        next[group][colorKey] = String(colorInput?.value || DEFAULT_DISPLAY[colorKey] || "");
+      }
+      this._emitConfig(next);
+      return;
+    }
+
+    if (colorKey && id.endsWith("__hex")) {
+      next[group][colorKey] = String(target.value || "").trim();
+      this._emitConfig(next);
+      return;
+    }
 
     if (target.type === "checkbox") {
       next[group][id] = Boolean(target.checked);
