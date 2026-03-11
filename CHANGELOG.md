@@ -9,6 +9,21 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.3.4] - 2026-03-11
+
+### Changed
+- README preview now shows both display modes with current screenshots:
+  - `assets/rv_compass_example.png`
+  - `assets/rv_top_example.png`
+- Updated README assets section to match active files only.
+
+### Removed
+- Removed legacy, no-longer-used top-view reference files from repository:
+  - `assets/rv_top_flair.png`
+  - `assets/rv-level-rv-top.svg`
+  - `dist/rv_top_flair.png`
+  - `dist/rv-level-rv-top.svg`
+
 ## [0.3.3] - 2026-03-11
 
 ### Changed
