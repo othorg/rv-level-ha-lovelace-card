@@ -1,6 +1,6 @@
-# WIT HA Lovelace Card
+# RV Level Lovelace Card
 
-Custom Lovelace card for Home Assistant to visualize WIT orientation data with two display modes:
+Custom Lovelace card for Home Assistant to visualize RV leveling/orientation data with two display modes:
 - `rv_top`: RV leveling top-view with corner raise guidance
 - `round_compass`: circular level target + rotating compass ring
 
@@ -8,7 +8,7 @@ Custom Lovelace card for Home Assistant to visualize WIT orientation data with t
 
 Current release line: `0.2.x` with dual visualization modes and full editor-based configuration.
 
-Planned next step: dedicated Home Assistant integration for WT901WIFI/WIT data source.
+Planned next step: dedicated Home Assistant integration for WT901WIFI data source.
 
 ## Features
 
@@ -54,7 +54,7 @@ Planned next step: dedicated Home Assistant integration for WT901WIFI/WIT data s
 3. Add repository URL:
    - `https://github.com/othorg/wit-ha-lovelace-card`
 4. Category: `Dashboard`.
-5. Install **WIT HA Lovelace Card**.
+5. Install **RV Level Lovelace Card**.
 6. Reload browser tab (or restart Home Assistant frontend once).
 7. Add card in dashboard.
 

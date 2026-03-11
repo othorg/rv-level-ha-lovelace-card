@@ -9,6 +9,32 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.2.3] - 2026-03-11
+
+### Changed
+- Card branding and docs updated to **RV Level Lovelace Card** (including HACS display name).
+- Round-compass header layout adjusted:
+  - temperature shown on the left (left-aligned),
+  - battery shown on the right (right-aligned),
+  - title centered between both values.
+- Added new configurable display color fields:
+  - `display.level_gradient_mid`
+  - `display.text_color`
+- Replaced remaining display color text fields with UI color pickers in the editor.
+- Corner values are now available in round-compass view with FL/FR/RL/RR indicators.
+
+### Fixed
+- Fixed `normalizeConfig()` root-field regression: `title` and `image` are now preserved from config.
+- Fixed corner value unit mismatch: raise values are converted from mm to cm before display and tolerance checks.
+- Fixed dynamic round level gradient to keep a distinct middle color stop during updates.
+- Removed redundant `projectToUnitCircle()` zero-magnitude check.
+
+### Tests
+- Added/updated tests for:
+  - root `title`/`image` config preservation
+  - cm-based corner raise values and tolerance behavior
+  - additional color normalization defaults (`level_gradient_mid`, `text_color`)
+
 ## [0.2.2] - 2026-03-11
 
 ### Changed

@@ -130,13 +130,26 @@ test("normalizeConfig applies defaults", () => {
   assert.equal(cfg.display.text_size_mode, "auto");
   assert.equal(cfg.display.background_color, "#9bc4d6");
   assert.equal(cfg.display.level_gradient_start, "#e8ff84");
+  assert.equal(cfg.display.level_gradient_mid, "#d6ee65");
   assert.equal(cfg.display.level_gradient_end, "#c3de41");
   assert.equal(cfg.display.dot_color, "#ff2a1f");
+  assert.equal(cfg.display.text_color, "#111111");
   assert.equal(cfg.display.smooth_alpha, 0.2);
   assert.equal(cfg.orientation.invert_yaw, false);
   assert.equal(cfg.orientation.yaw_offset_deg, 0);
   assert.equal(cfg.orientation.auto_screen_mapping, false);
   assert.equal(cfg.orientation.swap_axes, false);
+});
+
+test("normalizeConfig preserves title and image", () => {
+  const runtime = loadRuntime();
+  const cfg = runtime.api.normalizeConfig({
+    type: "custom:wit-ha-lovelace-card",
+    title: "Mein Titel",
+    image: "/local/custom/image.png",
+  });
+  assert.equal(cfg.title, "Mein Titel");
+  assert.equal(cfg.image, "/local/custom/image.png");
 });
 
 test("normalizeConfig keeps backward-compatible rv_top defaults when mode missing", () => {
@@ -386,6 +399,35 @@ test("round_compass ring rotation uses negative heading", () => {
   const model = card._buildModel();
   assert.equal(model.heading, 35);
   assert.equal(model.ringRotationDeg, -35);
+});
+
+test("corner raise values are exposed in centimeters for display and tolerance", () => {
+  const runtime = loadRuntime();
+  const CardClass = runtime.registry.get("wit-ha-lovelace-card");
+  const card = new CardClass();
+  card._config = runtime.api.normalizeConfig({
+    type: "custom:wit-ha-lovelace-card",
+    display: { level_tolerance_cm: 4 },
+    geometry: {
+      wheelbase_mm: 2000,
+      track_front_mm: 1723,
+      track_rear_mm: 1661,
+    },
+    entities: {
+      pitch: "sensor.pitch",
+      roll: "sensor.roll",
+    },
+  });
+  card._hass = {
+    states: {
+      "sensor.pitch": { state: "1.0" },
+      "sensor.roll": { state: "0.0" },
+    },
+  };
+  const model = card._buildModel();
+  // Around 34.9 mm -> around 3.49 cm after conversion.
+  assert.ok(model.corners.rl.raise > 3);
+  assert.ok(model.corners.rl.raise < 4);
 });
 
 test("setConfig forces DOM rebuild on display mode switch", () => {

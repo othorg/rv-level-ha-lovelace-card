@@ -1,6 +1,6 @@
 const CARD_TYPE = "wit-ha-lovelace-card";
-const CARD_NAME = "WIT RV Level Lovelace Card";
-const CARD_VERSION = "0.2.2";
+const CARD_NAME = "RV Level Lovelace Card";
+const CARD_VERSION = "0.2.3";
 
 const DEFAULT_GEOMETRY = {
   wheelbase_mm: 2000,
@@ -21,6 +21,7 @@ const DEFAULT_DISPLAY = {
   show_corner_values: true,
   background_color: "#9bc4d6",
   level_gradient_start: "#e8ff84",
+  level_gradient_mid: "#d6ee65",
   level_gradient_end: "#c3de41",
   level_highlight_color: "#ffffff",
   crosshair_color: "#141b13",
@@ -57,7 +58,7 @@ const DEFAULT_ENTITIES = {
 
 const I18N = {
   de: {
-    image_alt: "WIT Wohnmobil Nivellierung",
+    image_alt: "Wohnmobil Nivellierung",
     general: "Allgemein",
     title: "Ueberschrift",
     image_url: "Basisbild URL (optional)",
@@ -79,6 +80,7 @@ const I18N = {
     level_tolerance_cm: "Nivellier-Toleranz (cm)",
     background_color: "Hintergrundfarbe",
     level_gradient_start: "Wasserwaage Farbverlauf Start",
+    level_gradient_mid: "Wasserwaage Farbverlauf Mitte",
     level_gradient_end: "Wasserwaage Farbverlauf Ende",
     level_highlight_color: "Wasserwaage Highlight-Farbe",
     crosshair_color: "Fadenkreuz-Farbe",
@@ -121,7 +123,7 @@ const I18N = {
     unit_deg: "deg",
   },
   en: {
-    image_alt: "WIT RV leveling",
+    image_alt: "RV leveling",
     general: "General",
     title: "Title",
     image_url: "Base image URL (optional)",
@@ -143,6 +145,7 @@ const I18N = {
     level_tolerance_cm: "Level tolerance (cm)",
     background_color: "Background color",
     level_gradient_start: "Level gradient start",
+    level_gradient_mid: "Level gradient middle",
     level_gradient_end: "Level gradient end",
     level_highlight_color: "Level highlight color",
     crosshair_color: "Crosshair color",
@@ -311,8 +314,8 @@ function normalizeConfig(config) {
   const raw = config || {};
   const normalized = {
     type: `custom:${CARD_TYPE}`,
-    title: "",
-    image: "",
+    title: String(raw.title || ""),
+    image: String(raw.image || ""),
     entities: {
       ...DEFAULT_ENTITIES,
       ...(raw.entities || {}),
@@ -370,6 +373,7 @@ function normalizeConfig(config) {
   normalized.display.smooth_alpha = clampNumber(normalized.display.smooth_alpha, 0.01, 1, DEFAULT_DISPLAY.smooth_alpha);
   normalized.display.background_color = sanitizeCssColor(normalized.display.background_color, DEFAULT_DISPLAY.background_color);
   normalized.display.level_gradient_start = sanitizeCssColor(normalized.display.level_gradient_start, DEFAULT_DISPLAY.level_gradient_start);
+  normalized.display.level_gradient_mid = sanitizeCssColor(normalized.display.level_gradient_mid, DEFAULT_DISPLAY.level_gradient_mid);
   normalized.display.level_gradient_end = sanitizeCssColor(normalized.display.level_gradient_end, DEFAULT_DISPLAY.level_gradient_end);
   normalized.display.level_highlight_color = sanitizeCssColor(normalized.display.level_highlight_color, DEFAULT_DISPLAY.level_highlight_color);
   normalized.display.crosshair_color = sanitizeCssColor(normalized.display.crosshair_color, DEFAULT_DISPLAY.crosshair_color);
@@ -495,7 +499,7 @@ function projectToUnitCircle(x, y) {
   const nx = Number.isFinite(x) ? x : 0;
   const ny = Number.isFinite(y) ? y : 0;
   const mag = Math.hypot(nx, ny);
-  if (mag <= 1 || mag === 0) {
+  if (mag <= 1) {
     return { x: nx, y: ny };
   }
   return { x: nx / mag, y: ny / mag };
@@ -792,7 +796,7 @@ class WitHaLovelaceCard extends HTMLElement {
     const rawDotNy = pr.valid ? clamp((-pr.pitch) / maxTilt) : 0;
     const dot = projectToUnitCircle(rawDotNx, rawDotNy);
 
-    const tol = this._config.display.level_tolerance_cm;
+    const tolCm = this._config.display.level_tolerance_cm;
     const rawYaw = readNumericState(this._hass, this._config.entities.yaw);
     let heading = 0;
     let yaw = null;
@@ -807,22 +811,23 @@ class WitHaLovelaceCard extends HTMLElement {
       && tiltMagnitude <= this._config.display.compass_unreliable_tilt_deg,
     );
 
+    // computeLeveling returns mm; convert to cm for UI display/tolerance.
     const corners = {
       fl: {
-        raise: level ? level.raise_fl : null,
-        levelOk: Boolean(level && level.raise_fl <= tol),
+        raise: level ? level.raise_fl / 10 : null,
+        levelOk: Boolean(level && (level.raise_fl / 10) <= tolCm),
       },
       fr: {
-        raise: level ? level.raise_fr : null,
-        levelOk: Boolean(level && level.raise_fr <= tol),
+        raise: level ? level.raise_fr / 10 : null,
+        levelOk: Boolean(level && (level.raise_fr / 10) <= tolCm),
       },
       rl: {
-        raise: level ? level.raise_rl : null,
-        levelOk: Boolean(level && level.raise_rl <= tol),
+        raise: level ? level.raise_rl / 10 : null,
+        levelOk: Boolean(level && (level.raise_rl / 10) <= tolCm),
       },
       rr: {
-        raise: level ? level.raise_rr : null,
-        levelOk: Boolean(level && level.raise_rr <= tol),
+        raise: level ? level.raise_rr / 10 : null,
+        levelOk: Boolean(level && (level.raise_rr / 10) <= tolCm),
       },
     };
 
@@ -1271,7 +1276,7 @@ class WitHaLovelaceCard extends HTMLElement {
           min-width: 70px;
         }
         .head-value.right { text-align: right; justify-self: end; }
-        .head-value.left { text-align: right; justify-self: end; }
+        .head-value.left { text-align: left; justify-self: start; }
         .title {
           font-family: Arial, sans-serif;
           color: #111;
@@ -1431,9 +1436,9 @@ class WitHaLovelaceCard extends HTMLElement {
       <ha-card>
         <div class="wrapper round">
           <div class="round-head">
-            <div class="head-value left clickable batt" data-entity-key="battery_soc"></div>
+            <div class="head-value left clickable temp" data-entity-key="temperature"></div>
             <div class="title"></div>
-            <div class="head-value right clickable temp" data-entity-key="temperature"></div>
+            <div class="head-value right clickable batt" data-entity-key="battery_soc"></div>
           </div>
           <div class="compass-wrapper">
             <div class="ring-rotor">${this._buildCompassRingSvg()}</div>
@@ -1689,7 +1694,7 @@ class WitHaLovelaceCard extends HTMLElement {
 
     this._nodes.levelCircle.style.background = `
       radial-gradient(circle at 50% 36%, ${this._config.display.level_highlight_color}, rgba(255,255,255,0) 35%),
-      radial-gradient(circle at 50% 50%, ${this._config.display.level_gradient_start} 0%, ${this._config.display.level_gradient_start} 46%, ${this._config.display.level_gradient_end} 100%)
+      radial-gradient(circle at 50% 50%, ${this._config.display.level_gradient_start} 0%, ${this._config.display.level_gradient_mid} 46%, ${this._config.display.level_gradient_end} 100%)
     `;
     this._nodes.dot.style.background = this._config.display.dot_color;
     this._nodes.dot.style.borderColor = this._config.display.dot_border_color;
@@ -1850,6 +1855,7 @@ class WitHaLovelaceCardEditor extends HTMLElement {
       dot_border_color: asColorInputValue(c.display.dot_border_color, DEFAULT_DISPLAY.dot_border_color),
       crosshair_color: asColorInputValue(c.display.crosshair_color, DEFAULT_DISPLAY.crosshair_color),
       level_gradient_start: asColorInputValue(c.display.level_gradient_start, DEFAULT_DISPLAY.level_gradient_start),
+      level_gradient_mid: asColorInputValue(c.display.level_gradient_mid, DEFAULT_DISPLAY.level_gradient_mid),
       level_gradient_end: asColorInputValue(c.display.level_gradient_end, DEFAULT_DISPLAY.level_gradient_end),
       level_highlight_color: asColorInputValue(c.display.level_highlight_color, DEFAULT_DISPLAY.level_highlight_color),
       ring_background_color: asColorInputValue(c.display.ring_background_color, DEFAULT_DISPLAY.ring_background_color),
@@ -1946,6 +1952,9 @@ class WitHaLovelaceCardEditor extends HTMLElement {
           </div>
           <div class="row inline">
             <div><label>${escapeHtml(this._t("level_gradient_start"))}</label><input id="level_gradient_start" data-group="display" type="color" value="${escapeHtml(color.level_gradient_start)}" /></div>
+            <div><label>${escapeHtml(this._t("level_gradient_mid"))}</label><input id="level_gradient_mid" data-group="display" type="color" value="${escapeHtml(color.level_gradient_mid)}" /></div>
+          </div>
+          <div class="row inline">
             <div><label>${escapeHtml(this._t("level_gradient_end"))}</label><input id="level_gradient_end" data-group="display" type="color" value="${escapeHtml(color.level_gradient_end)}" /></div>
           </div>
           <div class="row inline">
@@ -2043,7 +2052,7 @@ if (!window.customCards.some((card) => card.type === CARD_TYPE)) {
   window.customCards.push({
     type: CARD_TYPE,
     name: CARD_NAME,
-    description: "RV leveling visualization card for WIT tilt sensors.",
+    description: "RV leveling visualization card.",
     preview: false,
     documentationURL: "https://github.com/othorg/wit-ha-lovelace-card",
     icon: DEFAULT_ICON_CANDIDATES[0] || "mdi:caravan",
