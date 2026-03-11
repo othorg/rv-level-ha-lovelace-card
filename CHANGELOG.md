@@ -9,6 +9,17 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.2.1] - 2026-03-11
+
+### Changed
+- Round compass and RV mode now use only configured `title`; removed hardcoded fallback title text.
+- Added smoothing for pitch/roll/yaw rendering in `round_compass` with shortest-path yaw wrap handling (359 -> 0 without jump).
+- Added optional automatic screen orientation mapping (`orientation.auto_screen_mapping`) for portrait/landscape axis behavior.
+- Added round-specific bubble radius control (`display.round_dot_boundary_radius_ratio`) so the bubble can reach the full usable liquid area.
+- Added compass reliability hint based on tilt threshold (`display.show_compass_status`, `display.compass_unreliable_tilt_deg`).
+- Added configurable color palette for background, bubble, level gradients, crosshair and compass ring.
+- Added tests for round dot geometry, color sanitization and shortest-angle interpolation.
+
 ## [0.2.0] - 2026-03-11
 
 ### Added

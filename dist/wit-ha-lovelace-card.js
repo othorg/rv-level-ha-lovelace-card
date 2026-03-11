@@ -1,6 +1,6 @@
 const CARD_TYPE = "wit-ha-lovelace-card";
 const CARD_NAME = "WIT RV Level Lovelace Card";
-const CARD_VERSION = "0.2.0";
+const CARD_VERSION = "0.2.1";
 
 const DEFAULT_GEOMETRY = {
   wheelbase_mm: 2000,
@@ -13,11 +13,28 @@ const DEFAULT_DISPLAY = {
   max_tilt_deg: 5,
   level_tolerance_cm: 0.1,
   dot_boundary_radius_ratio: 0.112,
+  round_dot_boundary_radius_ratio: 0.44,
   dot_size_ratio: 0.068,
   text_size_mode: "auto",
   show_temperature: true,
   show_battery: true,
   show_corner_values: true,
+  background_color: "#9bc4d6",
+  level_gradient_start: "#e8ff84",
+  level_gradient_end: "#c3de41",
+  level_highlight_color: "rgba(255,255,255,0.42)",
+  crosshair_color: "rgba(20,27,19,0.72)",
+  ring_background_color: "#0a0d13",
+  ring_tick_color: "#8f96a6",
+  ring_major_tick_color: "#dfe4ef",
+  ring_cardinal_color: "#d8df7a",
+  dot_color: "#ff2a1f",
+  dot_border_color: "#2a211f",
+  level_ok_color: "#00c853",
+  raise_color: "#ff1744",
+  show_compass_status: true,
+  compass_unreliable_tilt_deg: 20,
+  smooth_alpha: 0.2,
 };
 
 const DEFAULT_ORIENTATION = {
@@ -26,6 +43,7 @@ const DEFAULT_ORIENTATION = {
   invert_roll: false,
   invert_yaw: false,
   yaw_offset_deg: 0,
+  auto_screen_mapping: false,
 };
 
 const DEFAULT_ENTITIES = {
@@ -38,7 +56,6 @@ const DEFAULT_ENTITIES = {
 
 const I18N = {
   de: {
-    default_title: "Flair 920 - Wasserwaage",
     image_alt: "WIT Wohnmobil Nivellierung",
     general: "Allgemein",
     title: "Ueberschrift",
@@ -59,8 +76,25 @@ const I18N = {
     mode_round_compass: "Kompass-Wasserwaage",
     max_tilt_deg: "Max Tilt fuer Punkt (Grad)",
     level_tolerance_cm: "Nivellier-Toleranz (cm)",
+    background_color: "Hintergrundfarbe",
+    level_gradient_start: "Wasserwaage Farbverlauf Start",
+    level_gradient_end: "Wasserwaage Farbverlauf Ende",
+    level_highlight_color: "Wasserwaage Highlight-Farbe",
+    crosshair_color: "Fadenkreuz-Farbe",
+    ring_background_color: "Kompassring Hintergrund",
+    ring_tick_color: "Kompassring Skalenfarbe",
+    ring_major_tick_color: "Kompassring Hauptskala",
+    ring_cardinal_color: "Kompassring Himmelsrichtungen",
+    dot_color: "Blasenfarbe",
+    dot_border_color: "Blasenrandfarbe",
+    level_ok_color: "Nivelliert-Farbe",
+    raise_color: "Anheben-Farbe",
+    show_compass_status: "Kompass-Status anzeigen",
+    compass_unreliable_tilt_deg: "Tilt-Grenze fuer Kompass-Hinweis (Grad)",
+    smooth_alpha: "Glaettung (0-1)",
     text_size_mode: "Schriftgroesse",
     dot_boundary_radius_ratio: "Bubble-Radius (Verhaeltnis)",
+    round_dot_boundary_radius_ratio: "Bubble-Radius rund (Verhaeltnis)",
     dot_size_ratio: "Punktgroesse (Verhaeltnis)",
     text_size_auto: "Auto",
     text_size_small: "Klein",
@@ -75,6 +109,8 @@ const I18N = {
     invert_roll: "Roll invertieren",
     invert_yaw: "Yaw invertieren",
     yaw_offset_deg: "Yaw-Offset (Grad)",
+    auto_screen_mapping: "Achsen automatisch an Bildschirm drehen",
+    compass_reliability_hint: "Kompass evtl. unzuverlaessig (starke Neigung)",
     angle_x: "AngleX",
     angle_y: "AngleY",
     angle_z: "AngleZ",
@@ -83,7 +119,6 @@ const I18N = {
     unit_deg: "deg",
   },
   en: {
-    default_title: "Flair 920 - Level",
     image_alt: "WIT RV leveling",
     general: "General",
     title: "Title",
@@ -104,8 +139,25 @@ const I18N = {
     mode_round_compass: "Compass Level",
     max_tilt_deg: "Max tilt for dot (deg)",
     level_tolerance_cm: "Level tolerance (cm)",
+    background_color: "Background color",
+    level_gradient_start: "Level gradient start",
+    level_gradient_end: "Level gradient end",
+    level_highlight_color: "Level highlight color",
+    crosshair_color: "Crosshair color",
+    ring_background_color: "Compass ring background",
+    ring_tick_color: "Compass ring tick color",
+    ring_major_tick_color: "Compass ring major tick color",
+    ring_cardinal_color: "Compass ring cardinal color",
+    dot_color: "Bubble color",
+    dot_border_color: "Bubble border color",
+    level_ok_color: "Level-ok color",
+    raise_color: "Raise-needed color",
+    show_compass_status: "Show compass status",
+    compass_unreliable_tilt_deg: "Tilt limit for compass hint (deg)",
+    smooth_alpha: "Smoothing (0-1)",
     text_size_mode: "Text size",
     dot_boundary_radius_ratio: "Bubble radius (ratio)",
+    round_dot_boundary_radius_ratio: "Round bubble radius (ratio)",
     dot_size_ratio: "Dot size (ratio)",
     text_size_auto: "Auto",
     text_size_small: "Small",
@@ -120,6 +172,8 @@ const I18N = {
     invert_roll: "Invert roll",
     invert_yaw: "Invert yaw",
     yaw_offset_deg: "Yaw offset (deg)",
+    auto_screen_mapping: "Auto-map axes to screen orientation",
+    compass_reliability_hint: "Compass may be unreliable at high tilt",
     angle_x: "AngleX",
     angle_y: "AngleY",
     angle_z: "AngleZ",
@@ -136,8 +190,11 @@ const NUMBER_FIELDS = new Set([
   "max_tilt_deg",
   "level_tolerance_cm",
   "dot_boundary_radius_ratio",
+  "round_dot_boundary_radius_ratio",
   "dot_size_ratio",
   "yaw_offset_deg",
+  "compass_unreliable_tilt_deg",
+  "smooth_alpha",
 ]);
 
 const TEXT_SIZE_MODES = new Set(["auto", "small", "medium", "large"]);
@@ -213,6 +270,17 @@ function t(lang, key) {
   return I18N[lang]?.[key] || I18N.en[key] || key;
 }
 
+function sanitizeCssColor(value, fallback) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return fallback;
+  if (/^#[0-9a-fA-F]{3,8}$/.test(raw)) return raw;
+  if (/^rgba?\(\s*[\d.\s,%+-]+\)$/.test(raw)) return raw;
+  if (/^hsla?\(\s*[\d.\s,%+-]+\)$/.test(raw)) return raw;
+  if (/^var\(--[a-zA-Z0-9_-]+\)$/.test(raw)) return raw;
+  if (/^[a-zA-Z]+$/.test(raw)) return raw;
+  return fallback;
+}
+
 function clampNumber(value, min, max, fallback) {
   const num = Number(value);
   if (!Number.isFinite(num)) return fallback;
@@ -267,16 +335,44 @@ function normalizeConfig(config) {
     0.16,
     DEFAULT_DISPLAY.dot_size_ratio,
   );
+  normalized.display.round_dot_boundary_radius_ratio = clampNumber(
+    normalized.display.round_dot_boundary_radius_ratio,
+    0.2,
+    0.49,
+    clampNumber(normalized.display.dot_boundary_radius_ratio * 4, 0.2, 0.49, DEFAULT_DISPLAY.round_dot_boundary_radius_ratio),
+  );
   normalized.display.mode = normalizeDisplayMode(normalized.display.mode);
   normalized.display.text_size_mode = normalizeTextSizeMode(normalized.display.text_size_mode);
   normalized.display.show_temperature = Boolean(normalized.display.show_temperature);
   normalized.display.show_battery = Boolean(normalized.display.show_battery);
   normalized.display.show_corner_values = Boolean(normalized.display.show_corner_values);
+  normalized.display.show_compass_status = Boolean(normalized.display.show_compass_status);
+  normalized.display.compass_unreliable_tilt_deg = clampNumber(
+    normalized.display.compass_unreliable_tilt_deg,
+    1,
+    89,
+    DEFAULT_DISPLAY.compass_unreliable_tilt_deg,
+  );
+  normalized.display.smooth_alpha = clampNumber(normalized.display.smooth_alpha, 0.01, 1, DEFAULT_DISPLAY.smooth_alpha);
+  normalized.display.background_color = sanitizeCssColor(normalized.display.background_color, DEFAULT_DISPLAY.background_color);
+  normalized.display.level_gradient_start = sanitizeCssColor(normalized.display.level_gradient_start, DEFAULT_DISPLAY.level_gradient_start);
+  normalized.display.level_gradient_end = sanitizeCssColor(normalized.display.level_gradient_end, DEFAULT_DISPLAY.level_gradient_end);
+  normalized.display.level_highlight_color = sanitizeCssColor(normalized.display.level_highlight_color, DEFAULT_DISPLAY.level_highlight_color);
+  normalized.display.crosshair_color = sanitizeCssColor(normalized.display.crosshair_color, DEFAULT_DISPLAY.crosshair_color);
+  normalized.display.ring_background_color = sanitizeCssColor(normalized.display.ring_background_color, DEFAULT_DISPLAY.ring_background_color);
+  normalized.display.ring_tick_color = sanitizeCssColor(normalized.display.ring_tick_color, DEFAULT_DISPLAY.ring_tick_color);
+  normalized.display.ring_major_tick_color = sanitizeCssColor(normalized.display.ring_major_tick_color, DEFAULT_DISPLAY.ring_major_tick_color);
+  normalized.display.ring_cardinal_color = sanitizeCssColor(normalized.display.ring_cardinal_color, DEFAULT_DISPLAY.ring_cardinal_color);
+  normalized.display.dot_color = sanitizeCssColor(normalized.display.dot_color, DEFAULT_DISPLAY.dot_color);
+  normalized.display.dot_border_color = sanitizeCssColor(normalized.display.dot_border_color, DEFAULT_DISPLAY.dot_border_color);
+  normalized.display.level_ok_color = sanitizeCssColor(normalized.display.level_ok_color, DEFAULT_DISPLAY.level_ok_color);
+  normalized.display.raise_color = sanitizeCssColor(normalized.display.raise_color, DEFAULT_DISPLAY.raise_color);
 
   normalized.orientation.swap_axes = Boolean(normalized.orientation.swap_axes);
   normalized.orientation.invert_pitch = Boolean(normalized.orientation.invert_pitch);
   normalized.orientation.invert_roll = Boolean(normalized.orientation.invert_roll);
   normalized.orientation.invert_yaw = Boolean(normalized.orientation.invert_yaw);
+  normalized.orientation.auto_screen_mapping = Boolean(normalized.orientation.auto_screen_mapping);
   normalized.orientation.yaw_offset_deg = clampNumber(
     normalized.orientation.yaw_offset_deg,
     -360,
@@ -324,6 +420,13 @@ function resolvePitchRoll(hass, config) {
 
   let pitch = readNumericState(hass, pitchEntity);
   let roll = readNumericState(hass, rollEntity);
+
+  if (pitch !== null && roll !== null && config?.orientation?.auto_screen_mapping && isLandscapeOrientation()) {
+    const p = pitch;
+    // 90-degree remap for common landscape usage in dashboards.
+    pitch = roll;
+    roll = -p;
+  }
 
   if (config?.orientation?.swap_axes) {
     const tmp = pitch;
@@ -389,6 +492,31 @@ function normalize360(value) {
   return ((n % 360) + 360) % 360;
 }
 
+function shortestAngleDelta(fromDeg, toDeg) {
+  return ((toDeg - fromDeg + 540) % 360) - 180;
+}
+
+function isLandscapeOrientation() {
+  if (typeof window === "undefined") return false;
+  try {
+    const type = String(window?.screen?.orientation?.type || "").toLowerCase();
+    if (type.includes("landscape")) return true;
+    if (type.includes("portrait")) return false;
+  } catch {
+    // Ignore and fallback below.
+  }
+  try {
+    if (typeof window.matchMedia === "function") {
+      return Boolean(window.matchMedia("(orientation: landscape)").matches);
+    }
+  } catch {
+    // Ignore and fallback below.
+  }
+  const w = Number(window?.innerWidth || 0);
+  const h = Number(window?.innerHeight || 0);
+  return w > h;
+}
+
 function computeDotGeometry(width, display = DEFAULT_DISPLAY) {
   const boundaryRatio = clampNumber(
     display?.dot_boundary_radius_ratio,
@@ -411,6 +539,35 @@ function computeDotGeometry(width, display = DEFAULT_DISPLAY) {
   const bubbleZoneSizePx = boundaryRadiusPx * 2;
   const dotTrackRadiusPx = Math.max(0, boundaryRadiusPx - dotSizePx / 2);
   return { dotSizePx, boundaryRadiusPx, bubbleZoneSizePx, dotTrackRadiusPx };
+}
+
+function computeRoundDotGeometry(width, display = DEFAULT_DISPLAY) {
+  const legacyRatio = clampNumber(
+    display?.dot_boundary_radius_ratio,
+    0.04,
+    0.2,
+    DEFAULT_DISPLAY.dot_boundary_radius_ratio,
+  );
+  const roundRatio = clampNumber(
+    display?.round_dot_boundary_radius_ratio,
+    0.2,
+    0.49,
+    clampNumber(legacyRatio * 4, 0.2, 0.49, DEFAULT_DISPLAY.round_dot_boundary_radius_ratio),
+  );
+  const dotSizeRatio = clampNumber(
+    display?.dot_size_ratio,
+    0.02,
+    0.16,
+    DEFAULT_DISPLAY.dot_size_ratio,
+  );
+  const dotSizePx = clampInt(width * dotSizeRatio, 14, width * 0.18);
+  const boundaryRadiusPx = clampInt(
+    width * roundRatio,
+    Math.ceil(dotSizePx / 2) + 4,
+    width * 0.49,
+  );
+  const dotTrackRadiusPx = Math.max(0, boundaryRadiusPx - dotSizePx / 2);
+  return { dotSizePx, boundaryRadiusPx, dotTrackRadiusPx };
 }
 
 function escapeHtml(value) {
@@ -444,6 +601,20 @@ class WitHaLovelaceCard extends HTMLElement {
     this._currentMode = this._config.display.mode;
     this._cachedTrackedEntityIds = null;
     this._boundWrapperClick = this._onWrapperClick.bind(this);
+    this._roundColorSignature = "";
+    this._roundModel = null;
+    this._smoothState = {
+      pitch: null,
+      roll: null,
+      heading: null,
+    };
+    this._smoothTarget = {
+      pitch: null,
+      roll: null,
+      heading: null,
+    };
+    this._rafId = 0;
+    this._lastRafTs = 0;
   }
 
   static getStubConfig() {
@@ -461,6 +632,7 @@ class WitHaLovelaceCard extends HTMLElement {
     if (!config || !isSupportedCardType(config.type)) {
       throw new Error(`Invalid configuration for ${CARD_TYPE}`);
     }
+    this._stopAnimationLoop();
     const oldMode = this._currentMode;
     this._config = normalizeConfig(config);
     this._currentMode = this._config.display.mode;
@@ -470,6 +642,10 @@ class WitHaLovelaceCard extends HTMLElement {
     }
     this._cachedTrackedEntityIds = null;
     this._imageIdx = 0;
+    this._roundColorSignature = "";
+    this._roundModel = null;
+    this._smoothState = { pitch: null, roll: null, heading: null };
+    this._smoothTarget = { pitch: null, roll: null, heading: null };
     this._render();
   }
 
@@ -487,6 +663,7 @@ class WitHaLovelaceCard extends HTMLElement {
   }
 
   disconnectedCallback() {
+    this._stopAnimationLoop();
     if (this._nodes.wrapper) {
       this._nodes.wrapper.removeEventListener("click", this._boundWrapperClick);
     }
@@ -597,6 +774,11 @@ class WitHaLovelaceCard extends HTMLElement {
       yaw = normalize360(mappedYaw + this._config.orientation.yaw_offset_deg);
       heading = yaw;
     }
+    const tiltMagnitude = pr.valid ? Math.max(Math.abs(pr.pitch), Math.abs(pr.roll)) : null;
+    const compassReliable = Boolean(
+      tiltMagnitude !== null
+      && tiltMagnitude <= this._config.display.compass_unreliable_tilt_deg,
+    );
 
     const corners = {
       fl: {
@@ -625,6 +807,8 @@ class WitHaLovelaceCard extends HTMLElement {
       yawAvailable: yaw !== null,
       heading,
       ringRotationDeg: -heading,
+      tiltMagnitude,
+      compassReliable,
       dotNx: dot.x,
       dotNy: dot.y,
       corners,
@@ -644,6 +828,128 @@ class WitHaLovelaceCard extends HTMLElement {
     const key = String(clickable.dataset.entityKey || "");
     const entityId = this._config.entities?.[key] || "";
     if (entityId) this._emitMoreInfo(entityId);
+  }
+
+  _stopAnimationLoop() {
+    if (this._rafId) {
+      if (typeof cancelAnimationFrame === "function") {
+        cancelAnimationFrame(this._rafId);
+      }
+      this._rafId = 0;
+    }
+    this._lastRafTs = 0;
+  }
+
+  _ensureRoundRingSvg() {
+    const d = this._config.display;
+    const signature = [
+      d.ring_background_color,
+      d.ring_tick_color,
+      d.ring_major_tick_color,
+      d.ring_cardinal_color,
+    ].join("|");
+    if (signature === this._roundColorSignature) return;
+    this._roundColorSignature = signature;
+    if (this._nodes.ringRotor) {
+      this._nodes.ringRotor.innerHTML = this._buildCompassRingSvg();
+    }
+  }
+
+  _syncRoundTargets(model) {
+    this._roundModel = model;
+    if (model.pitch === null || model.roll === null) {
+      this._smoothTarget.pitch = null;
+      this._smoothTarget.roll = null;
+    } else {
+      this._smoothTarget.pitch = model.pitch;
+      this._smoothTarget.roll = model.roll;
+      if (this._smoothState.pitch === null || this._smoothState.roll === null) {
+        this._smoothState.pitch = model.pitch;
+        this._smoothState.roll = model.roll;
+      }
+    }
+
+    if (!model.yawAvailable) {
+      this._smoothTarget.heading = null;
+      this._smoothState.heading = null;
+      return;
+    }
+    const targetHeading = model.heading;
+    if (this._smoothState.heading === null) {
+      this._smoothState.heading = targetHeading;
+      this._smoothTarget.heading = targetHeading;
+      return;
+    }
+    const currentNorm = normalize360(this._smoothState.heading);
+    const delta = shortestAngleDelta(currentNorm, targetHeading);
+    this._smoothTarget.heading = this._smoothState.heading + delta;
+  }
+
+  _startRoundAnimationLoop() {
+    if (this._rafId || this._config.display.mode !== "round_compass") return;
+    if (typeof requestAnimationFrame !== "function") {
+      this._renderRoundDynamic();
+      return;
+    }
+    const tick = (ts) => {
+      this._rafId = 0;
+      if (!this._domReady || this._config.display.mode !== "round_compass" || !this._roundModel) return;
+
+      const prevTs = this._lastRafTs || ts;
+      const dt = Math.max(1, Math.min(120, ts - prevTs));
+      this._lastRafTs = ts;
+
+      const baseAlpha = this._config.display.smooth_alpha;
+      const frameAlpha = 1 - Math.pow(1 - baseAlpha, dt / 16.6667);
+      let moving = false;
+      const eps = 0.01;
+
+      for (const key of ["pitch", "roll", "heading"]) {
+        const target = this._smoothTarget[key];
+        if (target === null || target === undefined) continue;
+        if (!Number.isFinite(this._smoothState[key])) {
+          this._smoothState[key] = target;
+          continue;
+        }
+        const diff = target - this._smoothState[key];
+        if (Math.abs(diff) <= eps) {
+          this._smoothState[key] = target;
+          continue;
+        }
+        this._smoothState[key] += diff * frameAlpha;
+        moving = true;
+      }
+
+      this._renderRoundDynamic();
+      if (moving) {
+        this._rafId = requestAnimationFrame(tick);
+      }
+    };
+    this._rafId = requestAnimationFrame(tick);
+  }
+
+  _roundRenderValues() {
+    const model = this._roundModel;
+    if (!model) return null;
+    const pitch = this._smoothState.pitch ?? model.pitch ?? 0;
+    const roll = this._smoothState.roll ?? model.roll ?? 0;
+    const heading = this._smoothState.heading;
+
+    const maxTilt = this._config.display.max_tilt_deg || DEFAULT_DISPLAY.max_tilt_deg;
+    const clamp = (v) => Math.max(-1, Math.min(1, v));
+    const rawNx = model.valid ? clamp((-roll) / maxTilt) : 0;
+    const rawNy = model.valid ? clamp((-pitch) / maxTilt) : 0;
+    const dot = projectToUnitCircle(rawNx, rawNy);
+    const normalizedHeading = heading === null || heading === undefined ? 0 : normalize360(heading);
+
+    return {
+      pitch: model.valid ? pitch : null,
+      roll: model.valid ? roll : null,
+      yaw: model.yawAvailable ? normalizedHeading : null,
+      ringRotationDeg: -normalizedHeading,
+      dotNx: dot.x,
+      dotNy: dot.y,
+    };
   }
 
   _hasValidDomReferences() {
@@ -851,6 +1157,10 @@ class WitHaLovelaceCard extends HTMLElement {
   }
 
   _buildCompassRingSvg() {
+    const ringBg = this._config.display.ring_background_color;
+    const tick = this._config.display.ring_tick_color;
+    const majorTick = this._config.display.ring_major_tick_color;
+    const cardinalColor = this._config.display.ring_cardinal_color;
     const ticks = [];
     const labels = [];
     for (let deg = 0; deg < 360; deg += 5) {
@@ -863,7 +1173,7 @@ class WitHaLovelaceCard extends HTMLElement {
       const x2 = 50 + rOuter * Math.cos(rad);
       const y2 = 50 + rOuter * Math.sin(rad);
       ticks.push(
-        `<line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}" stroke="${major ? "#dfe4ef" : "#8f96a6"}" stroke-width="${major ? "0.6" : "0.35"}" />`,
+        `<line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}" stroke="${major ? majorTick : tick}" stroke-width="${major ? "0.6" : "0.35"}" />`,
       );
       if (deg % 90 === 0) {
         const cardinal = ["N", "E", "S", "W"][deg / 90];
@@ -871,20 +1181,20 @@ class WitHaLovelaceCard extends HTMLElement {
         const xl = 50 + rl * Math.cos(rad);
         const yl = 50 + rl * Math.sin(rad);
         labels.push(
-          `<text x="${xl.toFixed(2)}" y="${yl.toFixed(2)}" fill="#d8df7a" text-anchor="middle" dominant-baseline="middle" font-size="6.3" font-family="Arial" font-weight="700">${cardinal}</text>`,
+          `<text x="${xl.toFixed(2)}" y="${yl.toFixed(2)}" fill="${cardinalColor}" text-anchor="middle" dominant-baseline="middle" font-size="6.3" font-family="Arial" font-weight="700">${cardinal}</text>`,
         );
       } else if (deg % 30 === 0) {
         const rl = 37.8;
         const xl = 50 + rl * Math.cos(rad);
         const yl = 50 + rl * Math.sin(rad);
         labels.push(
-          `<text x="${xl.toFixed(2)}" y="${yl.toFixed(2)}" fill="#b8becd" text-anchor="middle" dominant-baseline="middle" font-size="3.2" font-family="Arial">${deg}</text>`,
+          `<text x="${xl.toFixed(2)}" y="${yl.toFixed(2)}" fill="${majorTick}" text-anchor="middle" dominant-baseline="middle" font-size="3.2" font-family="Arial">${deg}</text>`,
         );
       }
     }
     return `
       <svg viewBox="0 0 100 100" role="img" aria-hidden="true">
-        <circle cx="50" cy="50" r="49.5" fill="#0a0d13" stroke="#222938" stroke-width="0.9" />
+        <circle cx="50" cy="50" r="49.5" fill="${ringBg}" stroke="#222938" stroke-width="0.9" />
         ${ticks.join("")}
         ${labels.join("")}
       </svg>
@@ -897,7 +1207,7 @@ class WitHaLovelaceCard extends HTMLElement {
         :host { display: block; }
         ha-card { overflow: hidden; }
         .wrapper.round {
-          background: linear-gradient(180deg, #0f1421 0%, #0b101c 100%);
+          background: #9bc4d6;
           border-radius: 16px;
           padding: 14px 12px 14px;
           box-sizing: border-box;
@@ -1033,6 +1343,15 @@ class WitHaLovelaceCard extends HTMLElement {
           justify-self: end;
           opacity: 0.98;
         }
+        .status-row {
+          margin-top: 8px;
+          font-family: Arial, sans-serif;
+          color: #ffe185;
+          font-size: 13px;
+          text-align: center;
+          min-height: 18px;
+          line-height: 1.2;
+        }
       </style>
       <ha-card>
         <div class="wrapper round">
@@ -1067,6 +1386,7 @@ class WitHaLovelaceCard extends HTMLElement {
               <span class="value-number angle-z-value"></span>
             </div>
           </div>
+          <div class="status-row compass-status"></div>
         </div>
       </ha-card>
     `;
@@ -1087,6 +1407,7 @@ class WitHaLovelaceCard extends HTMLElement {
       angleXValue: this.shadowRoot.querySelector(".angle-x-value"),
       angleYValue: this.shadowRoot.querySelector(".angle-y-value"),
       angleZValue: this.shadowRoot.querySelector(".angle-z-value"),
+      compassStatus: this.shadowRoot.querySelector(".compass-status"),
     };
     this._domReady = true;
   }
@@ -1097,11 +1418,12 @@ class WitHaLovelaceCard extends HTMLElement {
       this._updateRoundCompass();
       return;
     }
+    this._stopAnimationLoop();
     this._updateRvTop();
   }
 
   _updateRvTop() {
-    const title = this._config.title || this._t("default_title");
+    const title = String(this._config.title || "").trim();
     const model = this._buildModel();
     const width = this._nodes.wrapper?.clientWidth || this._nodes.wrapper?.offsetWidth || 550;
     const height = this._nodes.wrapper?.clientHeight || Math.round((width * 1093) / 550);
@@ -1129,8 +1451,10 @@ class WitHaLovelaceCard extends HTMLElement {
       this._nodes.img.src = imageUrl;
     }
     this._nodes.img.alt = this._t("image_alt");
+    this._nodes.wrapper.style.background = this._config.display.background_color;
 
     this._nodes.title.textContent = title;
+    this._nodes.title.hidden = !title;
     this._nodes.title.style.fontSize = `${titlePx}px`;
     this._nodes.title.style.maxWidth = `${titleMaxWidthPx}px`;
 
@@ -1169,6 +1493,8 @@ class WitHaLovelaceCard extends HTMLElement {
     this._nodes.dot.style.height = `${dotSizePx}px`;
     this._nodes.dot.style.left = `${dotCenterX}px`;
     this._nodes.dot.style.top = `${dotCenterY}px`;
+    this._nodes.dot.style.background = this._config.display.dot_color;
+    this._nodes.dot.style.borderColor = this._config.display.dot_border_color;
 
     const updateCorner = (markerNode, valueNode, corner) => {
       markerNode.className = "marker";
@@ -1178,7 +1504,7 @@ class WitHaLovelaceCard extends HTMLElement {
         markerNode.style.height = `${levelMarkerPx}px`;
         markerNode.style.aspectRatio = "1 / 1";
         markerNode.style.borderRadius = "50%";
-        markerNode.style.background = "#00c853";
+        markerNode.style.background = this._config.display.level_ok_color;
         markerNode.style.boxShadow = "0 0 8px rgba(0,0,0,0.45)";
         markerNode.style.borderLeft = "0";
         markerNode.style.borderRight = "0";
@@ -1192,7 +1518,7 @@ class WitHaLovelaceCard extends HTMLElement {
         markerNode.style.boxShadow = "none";
         markerNode.style.borderLeft = `${raiseHalfPx}px solid transparent`;
         markerNode.style.borderRight = `${raiseHalfPx}px solid transparent`;
-        markerNode.style.borderBottom = `${raiseHeightPx}px solid #ff1744`;
+        markerNode.style.borderBottom = `${raiseHeightPx}px solid ${this._config.display.raise_color}`;
       }
       if (this._config.display.show_corner_values) {
         valueNode.hidden = false;
@@ -1212,8 +1538,11 @@ class WitHaLovelaceCard extends HTMLElement {
   }
 
   _updateRoundCompass() {
-    const title = this._config.title || this._t("default_title");
+    const title = String(this._config.title || "").trim();
     const model = this._buildModel();
+    this._syncRoundTargets(model);
+    this._ensureRoundRingSvg();
+
     const width = this._nodes.wrapper?.clientWidth || this._nodes.wrapper?.offsetWidth || 540;
     const autoScale = clampNumber(width / 540, 0.62, 1.12, 1);
     const modeScale = this._textModeFactor();
@@ -1224,6 +1553,7 @@ class WitHaLovelaceCard extends HTMLElement {
     const valuePx = clampInt(22 * scale, 14, 34);
 
     this._nodes.title.textContent = title;
+    this._nodes.title.hidden = !title;
     this._nodes.title.style.fontSize = `${titlePx}px`;
     this._nodes.temp.hidden = !this._config.display.show_temperature;
     this._nodes.batt.hidden = !this._config.display.show_battery;
@@ -1231,28 +1561,65 @@ class WitHaLovelaceCard extends HTMLElement {
     this._nodes.batt.textContent = this._buildHeadValue(model.battText);
     this._nodes.temp.style.fontSize = `${infoPx}px`;
     this._nodes.batt.style.fontSize = `${infoPx}px`;
+    this._nodes.wrapper.style.background = this._config.display.background_color;
 
     this._nodes.angleXLabel.textContent = `${this._t("angle_x")}`;
     this._nodes.angleYLabel.textContent = `${this._t("angle_y")}`;
     this._nodes.angleZLabel.textContent = `${this._t("angle_z")}`;
-    this._nodes.angleXValue.textContent = model.pitch !== null ? `${fmtTwo(model.pitch)} ${this._t("unit_deg")}` : `${this._t("not_available")} ${this._t("unit_deg")}`;
-    this._nodes.angleYValue.textContent = model.roll !== null ? `${fmtTwo(model.roll)} ${this._t("unit_deg")}` : `${this._t("not_available")} ${this._t("unit_deg")}`;
-    this._nodes.angleZValue.textContent = model.yawAvailable ? `${fmtTwo(model.yaw)} ${this._t("unit_deg")}` : `${this._t("not_available")} ${this._t("unit_deg")}`;
     this._nodes.angleXValue.style.fontSize = `${valuePx}px`;
     this._nodes.angleYValue.style.fontSize = `${valuePx}px`;
     this._nodes.angleZValue.style.fontSize = `${valuePx}px`;
 
-    this._nodes.ringRotor.style.transform = `rotate(${model.ringRotationDeg}deg)`;
+    this._nodes.levelCircle.style.background = `
+      radial-gradient(circle at 50% 36%, ${this._config.display.level_highlight_color}, rgba(255,255,255,0) 35%),
+      radial-gradient(circle at 50% 50%, ${this._config.display.level_gradient_start} 0%, ${this._config.display.level_gradient_start} 46%, ${this._config.display.level_gradient_end} 100%)
+    `;
+    this._nodes.dot.style.background = this._config.display.dot_color;
+    this._nodes.dot.style.borderColor = this._config.display.dot_border_color;
+
+    const crossNodes = this.shadowRoot.querySelectorAll(".cross");
+    for (const node of crossNodes) node.style.background = this._config.display.crosshair_color;
+
+    if (this._config.display.show_compass_status && model.yawAvailable && !model.compassReliable) {
+      this._nodes.compassStatus.textContent = this._t("compass_reliability_hint");
+      this._nodes.compassStatus.hidden = false;
+    } else {
+      this._nodes.compassStatus.textContent = "";
+      this._nodes.compassStatus.hidden = true;
+    }
+
+    this._renderRoundDynamic();
+    this._startRoundAnimationLoop();
+  }
+
+  _renderRoundDynamic() {
+    const model = this._roundModel;
+    if (!model || this._config.display.mode !== "round_compass") return;
+    const render = this._roundRenderValues();
+    if (!render) return;
+
+    this._nodes.angleXValue.textContent = render.pitch !== null
+      ? `${fmtTwo(render.pitch)} ${this._t("unit_deg")}`
+      : `${this._t("not_available")} ${this._t("unit_deg")}`;
+    this._nodes.angleYValue.textContent = render.roll !== null
+      ? `${fmtTwo(render.roll)} ${this._t("unit_deg")}`
+      : `${this._t("not_available")} ${this._t("unit_deg")}`;
+    this._nodes.angleZValue.textContent = render.yaw !== null
+      ? `${fmtTwo(render.yaw)} ${this._t("unit_deg")}`
+      : `${this._t("not_available")} ${this._t("unit_deg")}`;
+
+    this._nodes.ringRotor.style.transform = `rotate(${render.ringRotationDeg}deg)`;
     this._nodes.ringRotor.style.transition = "none";
 
+    const width = this._nodes.wrapper?.clientWidth || this._nodes.wrapper?.offsetWidth || 540;
     const levelSize = this._nodes.levelCircle?.clientWidth || Math.round(width * 0.64);
-    const dotGeometry = computeDotGeometry(levelSize, this._config.display);
+    const dotGeometry = computeRoundDotGeometry(levelSize, this._config.display);
     const dotSizePx = dotGeometry.dotSizePx;
     const dotTrackRadiusPx = dotGeometry.dotTrackRadiusPx;
     const centerX = levelSize * ROUND_CENTER_X_RATIO;
     const centerY = levelSize * ROUND_CENTER_Y_RATIO;
-    const dotCenterX = centerX + model.dotNx * dotTrackRadiusPx;
-    const dotCenterY = centerY + model.dotNy * dotTrackRadiusPx;
+    const dotCenterX = centerX + render.dotNx * dotTrackRadiusPx;
+    const dotCenterY = centerY + render.dotNy * dotTrackRadiusPx;
     this._nodes.dot.style.width = `${dotSizePx}px`;
     this._nodes.dot.style.height = `${dotSizePx}px`;
     this._nodes.dot.style.left = `${dotCenterX}px`;
@@ -1408,11 +1775,44 @@ class WitHaLovelaceCardEditor extends HTMLElement {
           </div>
           <div class="row inline">
             <div><label>${escapeHtml(this._t("dot_boundary_radius_ratio"))}</label><input id="dot_boundary_radius_ratio" data-group="display" type="number" step="0.001" value="${escapeHtml(c.display.dot_boundary_radius_ratio)}" /></div>
+            <div><label>${escapeHtml(this._t("round_dot_boundary_radius_ratio"))}</label><input id="round_dot_boundary_radius_ratio" data-group="display" type="number" step="0.001" value="${escapeHtml(c.display.round_dot_boundary_radius_ratio)}" /></div>
+          </div>
+          <div class="row inline">
             <div><label>${escapeHtml(this._t("dot_size_ratio"))}</label><input id="dot_size_ratio" data-group="display" type="number" step="0.001" value="${escapeHtml(c.display.dot_size_ratio)}" /></div>
+            <div><label>${escapeHtml(this._t("smooth_alpha"))}</label><input id="smooth_alpha" data-group="display" type="number" step="0.01" min="0.01" max="1" value="${escapeHtml(c.display.smooth_alpha)}" /></div>
+          </div>
+          <div class="row inline">
+            <div><label>${escapeHtml(this._t("background_color"))}</label><input id="background_color" data-group="display" type="text" value="${escapeHtml(c.display.background_color)}" /></div>
+            <div><label>${escapeHtml(this._t("dot_color"))}</label><input id="dot_color" data-group="display" type="text" value="${escapeHtml(c.display.dot_color)}" /></div>
+          </div>
+          <div class="row inline">
+            <div><label>${escapeHtml(this._t("dot_border_color"))}</label><input id="dot_border_color" data-group="display" type="text" value="${escapeHtml(c.display.dot_border_color)}" /></div>
+            <div><label>${escapeHtml(this._t("crosshair_color"))}</label><input id="crosshair_color" data-group="display" type="text" value="${escapeHtml(c.display.crosshair_color)}" /></div>
+          </div>
+          <div class="row inline">
+            <div><label>${escapeHtml(this._t("level_gradient_start"))}</label><input id="level_gradient_start" data-group="display" type="text" value="${escapeHtml(c.display.level_gradient_start)}" /></div>
+            <div><label>${escapeHtml(this._t("level_gradient_end"))}</label><input id="level_gradient_end" data-group="display" type="text" value="${escapeHtml(c.display.level_gradient_end)}" /></div>
+          </div>
+          <div class="row inline">
+            <div><label>${escapeHtml(this._t("level_highlight_color"))}</label><input id="level_highlight_color" data-group="display" type="text" value="${escapeHtml(c.display.level_highlight_color)}" /></div>
+            <div><label>${escapeHtml(this._t("ring_background_color"))}</label><input id="ring_background_color" data-group="display" type="text" value="${escapeHtml(c.display.ring_background_color)}" /></div>
+          </div>
+          <div class="row inline">
+            <div><label>${escapeHtml(this._t("ring_tick_color"))}</label><input id="ring_tick_color" data-group="display" type="text" value="${escapeHtml(c.display.ring_tick_color)}" /></div>
+            <div><label>${escapeHtml(this._t("ring_major_tick_color"))}</label><input id="ring_major_tick_color" data-group="display" type="text" value="${escapeHtml(c.display.ring_major_tick_color)}" /></div>
+          </div>
+          <div class="row inline">
+            <div><label>${escapeHtml(this._t("ring_cardinal_color"))}</label><input id="ring_cardinal_color" data-group="display" type="text" value="${escapeHtml(c.display.ring_cardinal_color)}" /></div>
+            <div><label>${escapeHtml(this._t("level_ok_color"))}</label><input id="level_ok_color" data-group="display" type="text" value="${escapeHtml(c.display.level_ok_color)}" /></div>
+          </div>
+          <div class="row inline">
+            <div><label>${escapeHtml(this._t("raise_color"))}</label><input id="raise_color" data-group="display" type="text" value="${escapeHtml(c.display.raise_color)}" /></div>
+            <div><label>${escapeHtml(this._t("compass_unreliable_tilt_deg"))}</label><input id="compass_unreliable_tilt_deg" data-group="display" type="number" step="0.1" value="${escapeHtml(c.display.compass_unreliable_tilt_deg)}" /></div>
           </div>
           <label class="check"><input id="show_temperature" data-group="display" type="checkbox" ${c.display.show_temperature ? "checked" : ""} /> ${escapeHtml(this._t("show_temperature"))}</label>
           <label class="check"><input id="show_battery" data-group="display" type="checkbox" ${c.display.show_battery ? "checked" : ""} /> ${escapeHtml(this._t("show_battery"))}</label>
           <label class="check"><input id="show_corner_values" data-group="display" type="checkbox" ${c.display.show_corner_values ? "checked" : ""} /> ${escapeHtml(this._t("show_corner_values"))}</label>
+          <label class="check"><input id="show_compass_status" data-group="display" type="checkbox" ${c.display.show_compass_status ? "checked" : ""} /> ${escapeHtml(this._t("show_compass_status"))}</label>
         </div>
 
         <div class="section">
@@ -1421,6 +1821,7 @@ class WitHaLovelaceCardEditor extends HTMLElement {
           <label class="check"><input id="invert_pitch" data-group="orientation" type="checkbox" ${c.orientation.invert_pitch ? "checked" : ""} /> ${escapeHtml(this._t("invert_pitch"))}</label>
           <label class="check"><input id="invert_roll" data-group="orientation" type="checkbox" ${c.orientation.invert_roll ? "checked" : ""} /> ${escapeHtml(this._t("invert_roll"))}</label>
           <label class="check"><input id="invert_yaw" data-group="orientation" type="checkbox" ${c.orientation.invert_yaw ? "checked" : ""} /> ${escapeHtml(this._t("invert_yaw"))}</label>
+          <label class="check"><input id="auto_screen_mapping" data-group="orientation" type="checkbox" ${c.orientation.auto_screen_mapping ? "checked" : ""} /> ${escapeHtml(this._t("auto_screen_mapping"))}</label>
           <div class="row"><label>${escapeHtml(this._t("yaw_offset_deg"))}</label><input id="yaw_offset_deg" data-group="orientation" type="number" step="0.1" value="${escapeHtml(c.orientation.yaw_offset_deg)}" /></div>
         </div>
       </div>
@@ -1501,10 +1902,12 @@ window.__WIT_CARD_TEST_API = {
   clampTiltForLeveling,
   projectToUnitCircle,
   computeDotGeometry,
+  computeRoundDotGeometry,
   resolvePitchRoll,
   fmtTwo,
   readNumericState,
   clampNumber,
+  shortestAngleDelta,
   isSupportedCardType,
 };
 

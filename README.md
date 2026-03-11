@@ -30,10 +30,15 @@ Planned next step: dedicated Home Assistant integration for WT901WIFI/WIT data s
   - max tilt range for center dot
   - level tolerance
   - center bubble radius ratio (`dot_boundary_radius_ratio`)
+  - round bubble radius ratio (`round_dot_boundary_radius_ratio`)
   - center dot size ratio (`dot_size_ratio`)
+  - smoothing (`smooth_alpha`)
   - text size mode (`auto`, `small`, `medium`, `large`)
+  - background + bubble/level/compass colors
+  - optional compass reliability hint
   - optional temperature/battery/corner labels
 - Orientation correction options:
+  - auto screen orientation mapping (portrait/landscape)
   - swap X/Y
   - invert pitch
   - invert roll
@@ -84,9 +89,19 @@ display:
   max_tilt_deg: 5
   level_tolerance_cm: 0.1
   dot_boundary_radius_ratio: 0.112
+  round_dot_boundary_radius_ratio: 0.44
   dot_size_ratio: 0.068
+  smooth_alpha: 0.2
+  background_color: "#9bc4d6"
+  dot_color: "#ff2a1f"
+  dot_border_color: "#2a211f"
+  level_gradient_start: "#e8ff84"
+  level_gradient_end: "#c3de41"
+  ring_background_color: "#0a0d13"
+  show_compass_status: true
   text_size_mode: auto
 orientation:
+  auto_screen_mapping: false
   swap_axes: false
   invert_pitch: false
   invert_roll: false

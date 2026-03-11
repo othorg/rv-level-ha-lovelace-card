@@ -125,10 +125,17 @@ test("normalizeConfig applies defaults", () => {
   assert.equal(cfg.display.mode, "rv_top");
   assert.equal(cfg.display.max_tilt_deg, 5);
   assert.equal(cfg.display.dot_boundary_radius_ratio, 0.112);
+  assert.equal(cfg.display.round_dot_boundary_radius_ratio, 0.44);
   assert.equal(cfg.display.dot_size_ratio, 0.068);
   assert.equal(cfg.display.text_size_mode, "auto");
+  assert.equal(cfg.display.background_color, "#9bc4d6");
+  assert.equal(cfg.display.level_gradient_start, "#e8ff84");
+  assert.equal(cfg.display.level_gradient_end, "#c3de41");
+  assert.equal(cfg.display.dot_color, "#ff2a1f");
+  assert.equal(cfg.display.smooth_alpha, 0.2);
   assert.equal(cfg.orientation.invert_yaw, false);
   assert.equal(cfg.orientation.yaw_offset_deg, 0);
+  assert.equal(cfg.orientation.auto_screen_mapping, false);
   assert.equal(cfg.orientation.swap_axes, false);
 });
 
@@ -255,6 +262,36 @@ test("computeDotGeometry respects user display ratios", () => {
   });
   assert.ok(large.boundaryRadiusPx > small.boundaryRadiusPx);
   assert.ok(large.dotSizePx > small.dotSizePx);
+});
+
+test("computeRoundDotGeometry uses round ratio and keeps edge-safe track", () => {
+  const runtime = loadRuntime();
+  const geom = runtime.api.computeRoundDotGeometry(360, {
+    dot_boundary_radius_ratio: 0.112,
+    round_dot_boundary_radius_ratio: 0.46,
+    dot_size_ratio: 0.08,
+  });
+  assert.ok(geom.boundaryRadiusPx > 120);
+  assert.equal(geom.boundaryRadiusPx - geom.dotSizePx / 2, geom.dotTrackRadiusPx);
+});
+
+test("normalizeConfig sanitizes invalid color strings", () => {
+  const runtime = loadRuntime();
+  const cfg = runtime.api.normalizeConfig({
+    type: "custom:wit-ha-lovelace-card",
+    display: {
+      background_color: "url(javascript:alert(1))",
+      dot_color: "#00ff00",
+    },
+  });
+  assert.equal(cfg.display.background_color, "#9bc4d6");
+  assert.equal(cfg.display.dot_color, "#00ff00");
+});
+
+test("shortestAngleDelta follows shortest path across wrap", () => {
+  const runtime = loadRuntime();
+  assert.equal(runtime.api.shortestAngleDelta(359, 1), 2);
+  assert.equal(runtime.api.shortestAngleDelta(1, 359), -2);
 });
 
 test("resolvePitchRoll respects swap and inversion flags", () => {
