@@ -9,6 +9,13 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.4.5] - 2026-03-12
+
+### Changed
+- `rv_top`: removed `AngleX`/`AngleY` captions (numeric values remain visible).
+- `rv_top`: aligned right-side angle value vertically between right leveling points (`FR`/`RR`).
+- `rv_top`: refined angle block sizing/positioning to prevent clipping/overlap artifacts.
+
 ## [0.4.4] - 2026-03-12
 
 ### Changed

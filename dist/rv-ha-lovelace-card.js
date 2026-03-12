@@ -1,6 +1,6 @@
 const CARD_TYPE = "rv-ha-lovelace-card";
 const CARD_NAME = "RV Level Lovelace Card";
-const CARD_VERSION = "0.4.4";
+const CARD_VERSION = "0.4.5";
 
 const DEFAULT_GEOMETRY = {
   wheelbase_mm: 2000,
@@ -1328,19 +1328,20 @@ class WitHaLovelaceCard extends HTMLElement {
           white-space: nowrap;
         }
         .angle-display.angle-x {
-          right: 2%;
-          left: auto;
+          right: 18%;
           top: 50%;
-          transform: translateY(-50%);
-          text-align: right;
-          width: min(36%, 170px);
+          transform: translate(50%, -50%);
+          text-align: center;
+          width: max-content;
+          max-width: 34%;
         }
         .angle-display.angle-y {
           bottom: 2%;
           left: 50%;
           transform: translateX(-50%);
           text-align: center;
-          width: min(54%, 260px);
+          width: max-content;
+          max-width: 60%;
         }
         .rv-top-status {
           margin-top: 6px;
@@ -2163,15 +2164,15 @@ class WitHaLovelaceCard extends HTMLElement {
     this._nodes.angleXLabel.parentElement.hidden = !showAngles;
     this._nodes.angleYLabel.parentElement.hidden = !showAngles;
     if (showAngles) {
-      // rv_top-only display mapping: swap X/Y labels for the requested UI layout.
-      this._nodes.angleXLabel.textContent = this._t("angle_y");
-      this._nodes.angleYLabel.textContent = this._t("angle_x");
-      this._nodes.angleXLabel.style.fontSize = `${angleLabelPx}px`;
-      this._nodes.angleYLabel.style.fontSize = `${angleLabelPx}px`;
+      // rv_top: show numeric values only (no AngleX/AngleY captions).
+      this._nodes.angleXLabel.textContent = "";
+      this._nodes.angleYLabel.textContent = "";
+      this._nodes.angleXLabel.hidden = true;
+      this._nodes.angleYLabel.hidden = true;
+      this._nodes.angleXLabel.style.display = "none";
+      this._nodes.angleYLabel.style.display = "none";
       this._nodes.angleXValue.style.fontSize = `${anglePx}px`;
       this._nodes.angleYValue.style.fontSize = `${anglePx}px`;
-      this._nodes.angleXLabel.style.color = textColor;
-      this._nodes.angleYLabel.style.color = textColor;
       this._nodes.angleXValue.style.color = textColor;
       this._nodes.angleYValue.style.color = textColor;
     }
