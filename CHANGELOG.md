@@ -9,6 +9,13 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.3.12] - 2026-03-12
+
+### Fixed
+- Removed both sign inversions in dot movement calculation (`rawDotNx`, `rawDotNy`) so the bubble now moves to the lower side, matching EasyLevel behavior.
+  - `roll > 0` (left side high) -> dot moves right
+  - `pitch < 0` (front low) -> dot moves up/front
+
 ## [0.3.11] - 2026-03-12
 
 ### Changed

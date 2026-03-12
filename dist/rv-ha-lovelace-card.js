@@ -1,6 +1,6 @@
 const CARD_TYPE = "rv-ha-lovelace-card";
 const CARD_NAME = "RV Level Lovelace Card";
-const CARD_VERSION = "0.3.11";
+const CARD_VERSION = "0.3.12";
 
 const DEFAULT_GEOMETRY = {
   wheelbase_mm: 2000,
@@ -803,8 +803,9 @@ class WitHaLovelaceCard extends HTMLElement {
     const maxTilt = this._config.display.max_tilt_deg || DEFAULT_DISPLAY.max_tilt_deg;
 
     const clamp = (v) => Math.max(-1, Math.min(1, v));
-    const rawDotNx = pr.valid ? clamp((-pr.roll) / maxTilt) : 0;
-    const rawDotNy = pr.valid ? clamp((-pr.pitch) / maxTilt) : 0;
+    // Ball behavior: dot moves toward the low side (matching EasyLevel reference).
+    const rawDotNx = pr.valid ? clamp(pr.roll / maxTilt) : 0;
+    const rawDotNy = pr.valid ? clamp(pr.pitch / maxTilt) : 0;
     const dot = projectToUnitCircle(rawDotNx, rawDotNy);
 
     const tolCm = this._config.display.level_tolerance_cm;
