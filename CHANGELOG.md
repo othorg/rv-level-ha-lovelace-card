@@ -9,6 +9,14 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.4.6] - 2026-03-12
+
+### Changed
+- `rv_top` pixel fine-tuning:
+  - aligned all four leveling markers (`FL/FR/RL/RR`) to exact center coordinates
+  - aligned marker symbols and values to the same vertical guide lines
+  - centered the right-side angle value on the right guide line (not left-aligned)
+
 ## [0.4.5] - 2026-03-12
 
 ### Changed
