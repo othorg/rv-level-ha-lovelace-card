@@ -9,6 +9,22 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.4.2] - 2026-03-12
+
+### Changed
+- `rv_top` angle display mapping updated:
+  - `AngleX` now shows `pitch`
+  - `AngleY` now shows `roll`
+- `rv_top` angle unit switched from `deg` to `°`.
+- Repositioned `rv_top` angle blocks to avoid overlap with the RV SVG.
+- Roll sign handling changed to match desired default behavior without requiring a checkbox:
+  - roll is now inverted by default in leveling display
+  - `invert_roll` option now acts as "disable roll inversion"
+
+### Tests
+- Updated existing `resolvePitchRoll` expectations for the new default roll inversion behavior.
+- Added explicit test coverage for the new `invert_roll` toggle semantics.
+
 ## [0.4.1] - 2026-03-12
 
 ### Added

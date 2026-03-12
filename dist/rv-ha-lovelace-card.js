@@ -1,6 +1,6 @@
 const CARD_TYPE = "rv-ha-lovelace-card";
 const CARD_NAME = "RV Level Lovelace Card";
-const CARD_VERSION = "0.4.1";
+const CARD_VERSION = "0.4.2";
 
 const DEFAULT_GEOMETRY = {
   wheelbase_mm: 2000,
@@ -130,7 +130,7 @@ const I18N = {
     orientation: "Sensorausrichtung",
     swap_axes: "X/Y tauschen",
     invert_pitch: "Pitch invertieren",
-    invert_roll: "Roll invertieren",
+    invert_roll: "Roll-Invertierung deaktivieren",
     invert_yaw: "Yaw invertieren",
     sensor_forward_axis: "Sensor-Vorwaertsachse",
     forward_axis_x: "X nach vorne",
@@ -210,7 +210,7 @@ const I18N = {
     orientation: "Sensor orientation",
     swap_axes: "Swap X/Y",
     invert_pitch: "Invert pitch",
-    invert_roll: "Invert roll",
+    invert_roll: "Disable roll inversion",
     invert_yaw: "Invert yaw",
     sensor_forward_axis: "Sensor forward axis",
     forward_axis_x: "X forward",
@@ -511,6 +511,9 @@ function resolvePitchRoll(hass, config, isLandscape = isLandscapeOrientation()) 
     roll = tmp;
   }
   if (pitch !== null && config?.orientation?.invert_pitch) pitch = -pitch;
+  // Base behavior: roll axis is inverted by default for this card's visual convention.
+  // The editor toggle now acts as "disable roll inversion".
+  if (roll !== null) roll = -roll;
   if (roll !== null && config?.orientation?.invert_roll) roll = -roll;
 
   return { pitch, roll, rawPitch, rawRoll, valid: pitch !== null && roll !== null };
@@ -1323,13 +1326,15 @@ class WitHaLovelaceCard extends HTMLElement {
           font-variant-numeric: tabular-nums;
         }
         .angle-display.angle-x {
-          right: 1%;
+          left: calc(50% + min(28vw, 175px));
           top: 50%;
           transform: translateY(-50%);
+          text-align: left;
         }
         .angle-display.angle-y {
-          bottom: 1%;
+          top: calc(50% + min(34vw, 220px));
           left: 50%;
+          bottom: auto;
           transform: translateX(-50%);
         }
         .rv-top-status {
@@ -2153,8 +2158,9 @@ class WitHaLovelaceCard extends HTMLElement {
     this._nodes.angleXLabel.parentElement.hidden = !showAngles;
     this._nodes.angleYLabel.parentElement.hidden = !showAngles;
     if (showAngles) {
-      this._nodes.angleXLabel.textContent = this._t("angle_x");
-      this._nodes.angleYLabel.textContent = this._t("angle_y");
+      // rv_top-only display mapping: swap X/Y labels for the requested UI layout.
+      this._nodes.angleXLabel.textContent = this._t("angle_y");
+      this._nodes.angleYLabel.textContent = this._t("angle_x");
       this._nodes.angleXLabel.style.fontSize = `${angleLabelPx}px`;
       this._nodes.angleYLabel.style.fontSize = `${angleLabelPx}px`;
       this._nodes.angleXValue.style.fontSize = `${anglePx}px`;
@@ -2190,12 +2196,13 @@ class WitHaLovelaceCard extends HTMLElement {
     const render = this._roundRenderValues();
     if (!render) return;
 
-    this._nodes.angleXValue.textContent = render.roll !== null
-      ? `${fmtTwo(render.roll)} ${this._t("unit_deg")}`
-      : `${this._t("not_available")} ${this._t("unit_deg")}`;
-    this._nodes.angleYValue.textContent = render.pitch !== null
-      ? `${fmtTwo(render.pitch)} ${this._t("unit_deg")}`
-      : `${this._t("not_available")} ${this._t("unit_deg")}`;
+    // rv_top-only display mapping: swap X/Y value presentation.
+    this._nodes.angleXValue.textContent = render.pitch !== null
+      ? `${fmtTwo(render.pitch)} °`
+      : `${this._t("not_available")} °`;
+    this._nodes.angleYValue.textContent = render.roll !== null
+      ? `${fmtTwo(render.roll)} °`
+      : `${this._t("not_available")} °`;
 
     this._nodes.miniRingRotor.style.transform = `rotate(${render.ringRotationDeg}deg)`;
     this._nodes.miniRingRotor.style.transition = "none";

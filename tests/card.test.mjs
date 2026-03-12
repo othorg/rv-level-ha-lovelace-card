@@ -381,7 +381,29 @@ test("resolvePitchRoll respects swap and inversion flags", () => {
 
   assert.equal(result.valid, true);
   assert.equal(result.pitch, 2.0);
-  assert.equal(result.roll, 1.5);
+  assert.equal(result.roll, -1.5);
+});
+
+test("resolvePitchRoll invert_roll disables default roll inversion", () => {
+  const runtime = loadRuntime();
+  const hass = {
+    states: {
+      "sensor.pitch": { state: "0.0" },
+      "sensor.roll": { state: "2.0" },
+    },
+  };
+
+  const defaultRoll = runtime.api.resolvePitchRoll(hass, {
+    entities: { pitch: "sensor.pitch", roll: "sensor.roll" },
+    orientation: { invert_roll: false },
+  });
+  assert.equal(defaultRoll.roll, -2.0);
+
+  const disabledInversion = runtime.api.resolvePitchRoll(hass, {
+    entities: { pitch: "sensor.pitch", roll: "sensor.roll" },
+    orientation: { invert_roll: true },
+  });
+  assert.equal(disabledInversion.roll, 2.0);
 });
 
 test("resolvePitchRoll auto_screen_mapping + swap_axes combined transformation", () => {
@@ -408,7 +430,7 @@ test("resolvePitchRoll auto_screen_mapping + swap_axes combined transformation",
 
   assert.equal(result.valid, true);
   assert.equal(result.pitch, 3.0);
-  assert.equal(result.roll, 1.0);
+  assert.equal(result.roll, -1.0);
 
   // Same input but portrait (auto_screen_mapping skipped):
   // swap_axes: pitch=1.0, roll=3.0 → invert_pitch: pitch=-1.0
@@ -423,7 +445,7 @@ test("resolvePitchRoll auto_screen_mapping + swap_axes combined transformation",
   }, /* isLandscape */ false);
 
   assert.equal(portrait.pitch, -1.0);
-  assert.equal(portrait.roll, 3.0);
+  assert.equal(portrait.roll, -3.0);
 });
 
 test("normalize360 wraps negative and oversized angles", () => {
@@ -741,7 +763,7 @@ test("resolvePitchRoll returns rawPitch and rawRoll", () => {
   assert.equal(pr.rawPitch, 2.5, "rawPitch should be original sensor value");
   assert.equal(pr.rawRoll, -1.3, "rawRoll should be original sensor value");
   assert.equal(pr.pitch, -2.5, "pitch should be inverted");
-  assert.equal(pr.roll, -1.3, "roll should not be inverted");
+  assert.equal(pr.roll, 1.3, "roll should be inverted by default");
 });
 
 test("_buildModel uses mag heading when mag entities configured", () => {
