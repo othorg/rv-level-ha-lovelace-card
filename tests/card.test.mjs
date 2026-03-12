@@ -241,7 +241,7 @@ test("computeLeveling returns zero raises on flat surface", () => {
   assert.equal(result.raise_rr, 0);
 });
 
-test("computeLeveling keeps diagonal raise mapping for YAML parity", () => {
+test("computeLeveling uses direct raise mapping (height above lowest corner)", () => {
   const runtime = loadRuntime();
   const result = runtime.api.computeLeveling(0, 5, {
     wheelbase_mm: 2000,
@@ -250,10 +250,10 @@ test("computeLeveling keeps diagonal raise mapping for YAML parity", () => {
   });
 
   const minZ = Math.min(result.z_fl, result.z_fr, result.z_rl, result.z_rr);
-  assert.equal(result.raise_fl, Math.max(0, result.z_rr - minZ));
-  assert.equal(result.raise_fr, Math.max(0, result.z_rl - minZ));
-  assert.equal(result.raise_rl, Math.max(0, result.z_fr - minZ));
-  assert.equal(result.raise_rr, Math.max(0, result.z_fl - minZ));
+  assert.equal(result.raise_fl, Math.max(0, result.z_fl - minZ));
+  assert.equal(result.raise_fr, Math.max(0, result.z_fr - minZ));
+  assert.equal(result.raise_rl, Math.max(0, result.z_rl - minZ));
+  assert.equal(result.raise_rr, Math.max(0, result.z_rr - minZ));
 });
 
 test("shouldShowRaiseValue hides values at/below tolerance and shows above", () => {
@@ -380,6 +380,48 @@ test("resolvePitchRoll respects swap and inversion flags", () => {
   assert.equal(result.roll, 1.5);
 });
 
+test("resolvePitchRoll auto_screen_mapping + swap_axes combined transformation", () => {
+  const runtime = loadRuntime();
+  const hass = {
+    states: {
+      "sensor.pitch": { state: "3.0" },
+      "sensor.roll": { state: "1.0" },
+    },
+  };
+
+  // auto_screen_mapping in landscape: pitch=roll, roll=-pitch → pitch=1.0, roll=-3.0
+  // then swap_axes: pitch=roll=-3.0, roll=pitch=1.0
+  // then invert_pitch: pitch=3.0
+  const result = runtime.api.resolvePitchRoll(hass, {
+    entities: { pitch: "sensor.pitch", roll: "sensor.roll" },
+    orientation: {
+      auto_screen_mapping: true,
+      swap_axes: true,
+      invert_pitch: true,
+      invert_roll: false,
+    },
+  }, /* isLandscape */ true);
+
+  assert.equal(result.valid, true);
+  assert.equal(result.pitch, 3.0);
+  assert.equal(result.roll, 1.0);
+
+  // Same input but portrait (auto_screen_mapping skipped):
+  // swap_axes: pitch=1.0, roll=3.0 → invert_pitch: pitch=-1.0
+  const portrait = runtime.api.resolvePitchRoll(hass, {
+    entities: { pitch: "sensor.pitch", roll: "sensor.roll" },
+    orientation: {
+      auto_screen_mapping: true,
+      swap_axes: true,
+      invert_pitch: true,
+      invert_roll: false,
+    },
+  }, /* isLandscape */ false);
+
+  assert.equal(portrait.pitch, -1.0);
+  assert.equal(portrait.roll, 3.0);
+});
+
 test("normalize360 wraps negative and oversized angles", () => {
   const runtime = loadRuntime();
   assert.equal(runtime.api.normalize360(0), 0);
@@ -456,6 +498,9 @@ test("corner raise values are exposed in centimeters for display and tolerance",
       track_front_mm: 1723,
       track_rear_mm: 1661,
     },
+    orientation: {
+      swap_axes: false,
+    },
     entities: {
       pitch: "sensor.pitch",
       roll: "sensor.roll",
@@ -468,9 +513,11 @@ test("corner raise values are exposed in centimeters for display and tolerance",
     },
   };
   const model = card._buildModel();
-  // Around 34.9 mm -> around 3.49 cm after conversion.
-  assert.ok(model.corners.rl.raise > 3);
-  assert.ok(model.corners.rl.raise < 4);
+  // pitch=1° lifts front by ~34.9 mm = ~3.49 cm (direct mapping: FL/FR are above RL/RR).
+  assert.ok(model.corners.fl.raise > 3);
+  assert.ok(model.corners.fl.raise < 4);
+  assert.equal(model.corners.rl.raise, 0);
+  assert.equal(model.corners.rr.raise, 0);
 });
 
 test("setConfig forces DOM rebuild on display mode switch", () => {

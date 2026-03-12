@@ -9,6 +9,22 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.3.11] - 2026-03-12
+
+### Changed
+- Refined axis semantics and documentation:
+  - `AngleX` now explicitly displays roll (side tilt).
+  - `AngleY` now explicitly displays pitch (front/back tilt).
+- Updated orientation badge SVG to better match installation reference:
+  - clear `FRONT` marker
+  - axis labeling `Y` forward, `X` right, `Z+` up.
+- Switched leveling corner calculation to direct per-corner mapping (`raise_corner = corner_height - min_height`) for clearer interpretation against reference hardware.
+- README updated with explicit angle and corner value interpretation notes.
+
+### Tests
+- Updated `computeLeveling` expectations for direct corner mapping.
+- Added explicit coverage for combined `auto_screen_mapping + swap_axes` behavior.
+
 ## [0.3.10] - 2026-03-12
 
 ### Changed

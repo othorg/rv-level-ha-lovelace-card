@@ -1,6 +1,6 @@
 const CARD_TYPE = "rv-ha-lovelace-card";
 const CARD_NAME = "RV Level Lovelace Card";
-const CARD_VERSION = "0.3.10";
+const CARD_VERSION = "0.3.11";
 
 const DEFAULT_GEOMETRY = {
   wheelbase_mm: 2000,
@@ -128,8 +128,8 @@ const I18N = {
     yaw_offset_deg: "Yaw-Offset (Grad)",
     auto_screen_mapping: "Achsen automatisch an Bildschirm drehen",
     compass_reliability_hint: "Kompass evtl. unzuverlaessig (starke Neigung)",
-    angle_x: "AngleX",
-    angle_y: "AngleY",
+    angle_x: "AngleX (Seitenneigung)",
+    angle_y: "AngleY (Laengsneigung)",
     angle_z: "AngleZ",
     not_available: "--",
     unit_cm: "cm",
@@ -200,8 +200,8 @@ const I18N = {
     yaw_offset_deg: "Yaw offset (deg)",
     auto_screen_mapping: "Auto-map axes to screen orientation",
     compass_reliability_hint: "Compass may be unreliable at high tilt",
-    angle_x: "AngleX",
-    angle_y: "AngleY",
+    angle_x: "AngleX (roll)",
+    angle_y: "AngleY (pitch)",
     angle_z: "AngleZ",
     not_available: "--",
     unit_cm: "cm",
@@ -502,18 +502,19 @@ function computeLeveling(pitchDeg, rollDeg, geometry) {
 
   const minZ = Math.min(z_fl, z_fr, z_rl, z_rr);
 
-  // Note: The raise_* mapping intentionally mirrors the existing EasyLevel YAML logic
-  // provided by the project owner (diagonal reference mapping).
+  // Direct mapping: raise_X = height of corner X above the lowest point.
+  // Green (raise=0) marks the lowest corner (reference / ground contact).
+  // Red values show how much higher each corner is — matching EasyLevel display.
   return {
     z_fl,
     z_fr,
     z_rl,
     z_rr,
     minZ,
-    raise_fl: Math.max(0, z_rr - minZ),
-    raise_fr: Math.max(0, z_rl - minZ),
-    raise_rl: Math.max(0, z_fr - minZ),
-    raise_rr: Math.max(0, z_fl - minZ),
+    raise_fl: Math.max(0, z_fl - minZ),
+    raise_fr: Math.max(0, z_fr - minZ),
+    raise_rl: Math.max(0, z_rl - minZ),
+    raise_rr: Math.max(0, z_rr - minZ),
   };
 }
 
@@ -1099,7 +1100,11 @@ class WitHaLovelaceCard extends HTMLElement {
         }
         .rv-svg-container {
           position: absolute;
-          top: 2%; bottom: 4%; left: 16%; right: 16%;
+          left: 50%;
+          top: 50%;
+          width: 68%;
+          height: 94%;
+          transform: translate(-50%, -50%);
         }
         .rv-svg-container svg { width: 100%; height: 100%; display: block; }
         .wheel-indicator {
@@ -1134,7 +1139,7 @@ class WitHaLovelaceCard extends HTMLElement {
         }
         .mini-compass {
           position: absolute;
-          left: 50%; top: 48%;
+          left: 50%; top: 50%;
           transform: translate(-50%, -50%);
           width: 42%;
           aspect-ratio: 1 / 1;
@@ -1407,21 +1412,22 @@ class WitHaLovelaceCard extends HTMLElement {
   _buildSensorAxesSvg() {
     const labelColor = escapeHtml(this._displayColor("text_color"));
     return `
-      <svg viewBox="0 0 64 64" role="img" aria-label="Sensor orientation axes" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="0 0 64 64" role="img" aria-label="Sensor orientation: Y to front, X to right, Z up" xmlns="http://www.w3.org/2000/svg">
         <circle cx="32" cy="32" r="30" fill="rgba(255,255,255,0.22)" stroke="rgba(0,0,0,0.2)" stroke-width="1"/>
         <circle cx="32" cy="32" r="3.2" fill="rgba(25,25,25,0.72)"/>
+        <text x="32" y="7.6" text-anchor="middle" font-size="6.6" font-family="Arial, sans-serif" fill="${labelColor}">FRONT</text>
 
         <line x1="32" y1="32" x2="52" y2="32" stroke="#e53935" stroke-width="2.2" stroke-linecap="round"/>
         <polygon points="56,32 50,28.5 50,35.5" fill="#e53935"/>
-        <text x="57.5" y="29.2" font-size="8.5" font-family="Arial, sans-serif" fill="${labelColor}">X</text>
+        <text x="56.8" y="28.8" font-size="7.8" font-family="Arial, sans-serif" fill="${labelColor}">X</text>
 
         <line x1="32" y1="32" x2="32" y2="12" stroke="#1fbf4c" stroke-width="2.2" stroke-linecap="round"/>
         <polygon points="32,8 28.5,14 35.5,14" fill="#1fbf4c"/>
-        <text x="35.3" y="11" font-size="8.5" font-family="Arial, sans-serif" fill="${labelColor}">Y</text>
+        <text x="35.2" y="10.8" font-size="7.8" font-family="Arial, sans-serif" fill="${labelColor}">Y</text>
 
-        <line x1="32" y1="32" x2="17.5" y2="46.5" stroke="#1e88e5" stroke-width="2.2" stroke-linecap="round"/>
-        <polygon points="14.2,49.8 16.2,43.2 20.8,47.8" fill="#1e88e5"/>
-        <text x="10.6" y="53.6" font-size="8.5" font-family="Arial, sans-serif" fill="${labelColor}">Z</text>
+        <circle cx="23" cy="41.5" r="4.2" fill="none" stroke="#1e88e5" stroke-width="1.6"/>
+        <circle cx="23" cy="41.5" r="1.6" fill="#1e88e5"/>
+        <text x="28.5" y="44.2" font-size="7.2" font-family="Arial, sans-serif" fill="${labelColor}">Z+</text>
       </svg>
     `;
   }
@@ -2052,11 +2058,11 @@ class WitHaLovelaceCard extends HTMLElement {
     const render = this._roundRenderValues();
     if (!render) return;
 
-    this._nodes.angleXValue.textContent = render.pitch !== null
-      ? `${fmtTwo(render.pitch)} ${this._t("unit_deg")}`
-      : `${this._t("not_available")} ${this._t("unit_deg")}`;
-    this._nodes.angleYValue.textContent = render.roll !== null
+    this._nodes.angleXValue.textContent = render.roll !== null
       ? `${fmtTwo(render.roll)} ${this._t("unit_deg")}`
+      : `${this._t("not_available")} ${this._t("unit_deg")}`;
+    this._nodes.angleYValue.textContent = render.pitch !== null
+      ? `${fmtTwo(render.pitch)} ${this._t("unit_deg")}`
       : `${this._t("not_available")} ${this._t("unit_deg")}`;
 
     this._nodes.miniRingRotor.style.transform = `rotate(${render.ringRotationDeg}deg)`;
@@ -2250,11 +2256,11 @@ class WitHaLovelaceCard extends HTMLElement {
     const render = this._roundRenderValues();
     if (!render) return;
 
-    this._nodes.angleXValue.textContent = render.pitch !== null
-      ? `${fmtTwo(render.pitch)} ${this._t("unit_deg")}`
-      : `${this._t("not_available")} ${this._t("unit_deg")}`;
-    this._nodes.angleYValue.textContent = render.roll !== null
+    this._nodes.angleXValue.textContent = render.roll !== null
       ? `${fmtTwo(render.roll)} ${this._t("unit_deg")}`
+      : `${this._t("not_available")} ${this._t("unit_deg")}`;
+    this._nodes.angleYValue.textContent = render.pitch !== null
+      ? `${fmtTwo(render.pitch)} ${this._t("unit_deg")}`
       : `${this._t("not_available")} ${this._t("unit_deg")}`;
     this._nodes.angleZValue.textContent = render.yaw !== null
       ? `${fmtTwo(render.yaw)} ${this._t("unit_deg")}`

@@ -61,22 +61,25 @@ Current release line: `0.3.x` with dual visualization modes and full editor-base
 The card shows two different value types:
 
 - **Angle values** (`AngleX`, `AngleY`, optional `AngleZ`)
+  - `AngleX` = **roll** (left/right tilt, Seitenneigung)
+  - `AngleY` = **pitch** (front/back tilt, Längsneigung)
+  - `AngleZ` = **yaw** (compass heading)
   - These can be **positive or negative**.
   - The sign depends on sensor orientation and your mapping options (`swap_axes`, `invert_pitch`, `invert_roll`, `invert_yaw`).
 - **Leveling points** (`FL`, `FR`, `RL`, `RR` in cm)
   - These values are **always >= 0** in the card (no negative cm values).
-  - Meaning: **how much to raise** (in cm) to match the lowest reference level.
+  - Meaning: **how high** each corner is above the lowest reference point (in cm).
 
 Color logic for leveling points:
 
-- **Green**: point is within tolerance (`level_tolerance_cm`)
-- **Red**: point is outside tolerance and needs raising
+- **Green**: point is within tolerance (`level_tolerance_cm`) — this is the lowest corner (reference / ground contact)
+- **Red**: point is above tolerance — shows how much higher this corner is than the reference
 
 Important behavior notes:
 
-- A **red point with a positive value** means this corner needs to be raised by that amount.
-- Leveling points intentionally have **no negative values** (the card shows raise demand, not lowering demand).
-- The `raise_*` mapping intentionally follows the existing EasyLevel YAML-compatible logic.
+- A **red point with a positive value** means this corner is that much higher than the lowest corner.
+- Leveling points intentionally have **no negative values** (the card shows height above the reference point).
+- The green corner is where you are closest to the ground — place leveling blocks/ramps under the opposite side to level the vehicle.
 
 ## Sensor placement & orientation (vehicle)
 
