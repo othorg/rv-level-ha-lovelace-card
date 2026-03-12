@@ -1,6 +1,6 @@
 const CARD_TYPE = "rv-ha-lovelace-card";
 const CARD_NAME = "RV Level Lovelace Card";
-const CARD_VERSION = "0.4.0";
+const CARD_VERSION = "0.4.1";
 
 const DEFAULT_GEOMETRY = {
   wheelbase_mm: 2000,
@@ -50,6 +50,7 @@ const DEFAULT_ORIENTATION = {
   invert_pitch: false,
   invert_roll: false,
   invert_yaw: false,
+  sensor_forward_axis: "x",
   yaw_offset_deg: 0,
   auto_screen_mapping: false,
 };
@@ -131,6 +132,9 @@ const I18N = {
     invert_pitch: "Pitch invertieren",
     invert_roll: "Roll invertieren",
     invert_yaw: "Yaw invertieren",
+    sensor_forward_axis: "Sensor-Vorwaertsachse",
+    forward_axis_x: "X nach vorne",
+    forward_axis_y: "Y nach vorne",
     yaw_offset_deg: "Yaw-Offset (Grad)",
     auto_screen_mapping: "Achsen automatisch an Bildschirm drehen",
     compass_reliability_hint: "Kompass evtl. unzuverlaessig (starke Neigung)",
@@ -208,6 +212,9 @@ const I18N = {
     invert_pitch: "Invert pitch",
     invert_roll: "Invert roll",
     invert_yaw: "Invert yaw",
+    sensor_forward_axis: "Sensor forward axis",
+    forward_axis_x: "X forward",
+    forward_axis_y: "Y forward",
     yaw_offset_deg: "Yaw offset (deg)",
     auto_screen_mapping: "Auto-map axes to screen orientation",
     compass_reliability_hint: "Compass may be unreliable at high tilt",
@@ -241,6 +248,7 @@ const NUMBER_FIELDS = new Set([
 
 const TEXT_SIZE_MODES = new Set(["auto", "small", "medium", "large"]);
 const DISPLAY_MODES = new Set(["rv_top", "round_compass"]);
+const SENSOR_FORWARD_AXES = new Set(["x", "y"]);
 const TEXT_SIZE_MODE_FACTORS = {
   auto: 1.0,
   small: 0.88,
@@ -430,6 +438,7 @@ function normalizeConfig(config) {
   normalized.orientation.invert_pitch = Boolean(normalized.orientation.invert_pitch);
   normalized.orientation.invert_roll = Boolean(normalized.orientation.invert_roll);
   normalized.orientation.invert_yaw = Boolean(normalized.orientation.invert_yaw);
+  normalized.orientation.sensor_forward_axis = normalizeSensorForwardAxis(normalized.orientation.sensor_forward_axis);
   normalized.orientation.auto_screen_mapping = Boolean(normalized.orientation.auto_screen_mapping);
   normalized.orientation.yaw_offset_deg = clampNumber(
     normalized.orientation.yaw_offset_deg,
@@ -451,6 +460,12 @@ function normalizeDisplayMode(value) {
   const mode = String(value || "").toLowerCase();
   if (DISPLAY_MODES.has(mode)) return mode;
   return DEFAULT_DISPLAY.mode;
+}
+
+function normalizeSensorForwardAxis(value) {
+  const axis = String(value || "").toLowerCase();
+  if (SENSOR_FORWARD_AXES.has(axis)) return axis;
+  return DEFAULT_ORIENTATION.sensor_forward_axis;
 }
 
 function isSupportedCardType(type) {
@@ -535,7 +550,7 @@ function computeLeveling(pitchDeg, rollDeg, geometry) {
   };
 }
 
-function computeMagHeading(magX, magY, magZ, rawPitchDeg, rawRollDeg) {
+function computeMagHeading(magX, magY, magZ, rawPitchDeg, rawRollDeg, forwardAxis = "x") {
   if (!Number.isFinite(magX) || !Number.isFinite(magY) || !Number.isFinite(magZ)
       || !Number.isFinite(rawPitchDeg) || !Number.isFinite(rawRollDeg)) return null;
 
@@ -553,9 +568,14 @@ function computeMagHeading(magX, magY, magZ, rawPitchDeg, rawRollDeg) {
   const mx_h = magX * cos_p + magY * sin_r * sin_p - magZ * cos_r * sin_p;
   const my_h = magY * cos_r + magZ * sin_r;
 
-  // heading = atan2(East, North) for CW-from-North convention
-  // X=forward=North-component, -Y=right=East-component (Y=left → East = -Y)
-  const heading_rad = Math.atan2(-my_h, mx_h);
+  // heading = atan2(East, North) for CW-from-North convention.
+  // Axis mapping presets:
+  // - x forward: North=+X, East=-Y (Y is left)
+  // - y forward: North=+Y, East=+X (X is right)
+  const axis = normalizeSensorForwardAxis(forwardAxis);
+  const heading_rad = axis === "y"
+    ? Math.atan2(mx_h, my_h)
+    : Math.atan2(-my_h, mx_h);
   return ((heading_rad * 180 / Math.PI) % 360 + 360) % 360;
 }
 
@@ -867,7 +887,14 @@ class WitHaLovelaceCard extends HTMLElement {
     const my = readNumericState(this._hass, this._config.entities.mag_y);
     const mz = readNumericState(this._hass, this._config.entities.mag_z);
     const magHeading = (mx !== null && my !== null && mz !== null && pr.rawPitch !== null && pr.rawRoll !== null)
-      ? computeMagHeading(mx, my, mz, pr.rawPitch, pr.rawRoll)
+      ? computeMagHeading(
+        mx,
+        my,
+        mz,
+        pr.rawPitch,
+        pr.rawRoll,
+        this._config.orientation.sensor_forward_axis,
+      )
       : null;
 
     if (magHeading !== null) {
@@ -1482,6 +1509,31 @@ class WitHaLovelaceCard extends HTMLElement {
   _buildSensorAxesSvg() {
     const labelColor = escapeHtml(this._displayColor("text_color"));
     const dimColor = "rgba(0,0,0,0.38)";
+    const axis = normalizeSensorForwardAxis(this._config?.orientation?.sensor_forward_axis);
+    if (axis === "y") {
+      return `
+      <svg viewBox="0 0 64 68" role="img" aria-label="Sensor orientation: Y=forward, X=right, Z=up" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="32" cy="32" r="30" fill="rgba(255,255,255,0.22)" stroke="rgba(0,0,0,0.2)" stroke-width="1"/>
+        <circle cx="32" cy="32" r="3.2" fill="rgba(25,25,25,0.72)"/>
+        <text x="32" y="7.6" text-anchor="middle" font-size="6.6" font-family="Arial, sans-serif" fill="${labelColor}">FRONT</text>
+
+        <line x1="32" y1="32" x2="32" y2="12" stroke="#1fbf4c" stroke-width="2.2" stroke-linecap="round"/>
+        <polygon points="32,8 28.5,14 35.5,14" fill="#1fbf4c"/>
+        <text x="35.2" y="10.8" font-size="7.8" font-family="Arial, sans-serif" fill="${labelColor}">Y</text>
+        <text x="18.5" y="10.8" font-size="4.8" font-family="Arial, sans-serif" fill="${dimColor}">Pitch</text>
+
+        <line x1="32" y1="32" x2="52" y2="32" stroke="#e53935" stroke-width="2.2" stroke-linecap="round"/>
+        <polygon points="56,32 50,28.5 50,35.5" fill="#e53935"/>
+        <text x="56.8" y="28.8" font-size="7.8" font-family="Arial, sans-serif" fill="${labelColor}">X</text>
+        <text x="47.5" y="37.2" font-size="4.8" font-family="Arial, sans-serif" fill="${dimColor}">Roll</text>
+
+        <circle cx="23" cy="41.5" r="4.2" fill="none" stroke="#1e88e5" stroke-width="1.6"/>
+        <circle cx="23" cy="41.5" r="1.6" fill="#1e88e5"/>
+        <text x="28.5" y="44.2" font-size="7.2" font-family="Arial, sans-serif" fill="${labelColor}">Z</text>
+        <text x="15" y="50.5" font-size="4.8" font-family="Arial, sans-serif" fill="${dimColor}">Yaw</text>
+      </svg>
+    `;
+    }
     return `
       <svg viewBox="0 0 64 68" role="img" aria-label="Sensor orientation: X=Pitch (forward), Y=Roll (left), Z=Yaw (up)" xmlns="http://www.w3.org/2000/svg">
         <circle cx="32" cy="32" r="30" fill="rgba(255,255,255,0.22)" stroke="rgba(0,0,0,0.2)" stroke-width="1"/>
@@ -2679,6 +2731,13 @@ class WitHaLovelaceCardEditor extends HTMLElement {
 
         <div class="section">
           <h3>${escapeHtml(this._t("orientation"))}</h3>
+          <div class="row">
+            <label>${escapeHtml(this._t("sensor_forward_axis"))}</label>
+            <select id="sensor_forward_axis" data-group="orientation">
+              <option value="x" ${c.orientation.sensor_forward_axis === "x" ? "selected" : ""}>${escapeHtml(this._t("forward_axis_x"))}</option>
+              <option value="y" ${c.orientation.sensor_forward_axis === "y" ? "selected" : ""}>${escapeHtml(this._t("forward_axis_y"))}</option>
+            </select>
+          </div>
           <label class="check"><input id="swap_axes" data-group="orientation" type="checkbox" ${c.orientation.swap_axes ? "checked" : ""} /> ${escapeHtml(this._t("swap_axes"))}</label>
           <label class="check"><input id="invert_pitch" data-group="orientation" type="checkbox" ${c.orientation.invert_pitch ? "checked" : ""} /> ${escapeHtml(this._t("invert_pitch"))}</label>
           <label class="check"><input id="invert_roll" data-group="orientation" type="checkbox" ${c.orientation.invert_roll ? "checked" : ""} /> ${escapeHtml(this._t("invert_roll"))}</label>
@@ -2790,6 +2849,7 @@ window.__WIT_CARD_TEST_API = {
   readNumericState,
   clampNumber,
   shortestAngleDelta,
+  normalizeSensorForwardAxis,
   isSupportedCardType,
 };
 

@@ -9,6 +9,22 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.4.1] - 2026-03-12
+
+### Added
+- New orientation option `sensor_forward_axis` (`x` or `y`) to support different physical sensor mounting directions.
+- Editor dropdown for selecting the sensor forward axis.
+
+### Changed
+- Magnetometer heading calculation now applies the selected `sensor_forward_axis` preset.
+- Sensor orientation badge (X/Y/Z SVG) now updates to match the selected forward-axis preset.
+- README updated with mounting guidance for `sensor_forward_axis` and heading correction workflow.
+
+### Tests
+- Added coverage for `sensor_forward_axis` normalization and defaults.
+- Added magnetometer heading tests for `x`-forward and `y`-forward presets.
+- Added model-level and SVG rendering tests for axis preset behavior.
+
 ## [0.4.0] - 2026-03-12
 
 ### Added

@@ -144,6 +144,7 @@ test("normalizeConfig applies defaults", () => {
   assert.equal(cfg.display.text_color, "#111111");
   assert.equal(cfg.display.smooth_alpha, 0.2);
   assert.equal(cfg.orientation.invert_yaw, false);
+  assert.equal(cfg.orientation.sensor_forward_axis, "x");
   assert.equal(cfg.orientation.yaw_offset_deg, 0);
   assert.equal(cfg.orientation.auto_screen_mapping, false);
   assert.equal(cfg.orientation.swap_axes, false);
@@ -189,12 +190,14 @@ test("normalizeConfig validates display mode and yaw-related orientation fields"
     entities: { yaw: "sensor.yaw" },
     orientation: {
       invert_yaw: true,
+      sensor_forward_axis: "y",
       yaw_offset_deg: 400,
     },
   });
   assert.equal(good.display.mode, "round_compass");
   assert.equal(good.entities.yaw, "sensor.yaw");
   assert.equal(good.orientation.invert_yaw, true);
+  assert.equal(good.orientation.sensor_forward_axis, "y");
   assert.equal(good.orientation.yaw_offset_deg, 360);
   assert.equal(good.display.round_overlay_scale, 3);
   assert.equal(good.display.round_overlay_offset_x, 100);
@@ -205,10 +208,11 @@ test("normalizeConfig validates display mode and yaw-related orientation fields"
   const bad = runtime.api.normalizeConfig({
     type: "custom:rv-ha-lovelace-card",
     display: { mode: "other_mode" },
-    orientation: { yaw_offset_deg: -999 },
+    orientation: { yaw_offset_deg: -999, sensor_forward_axis: "invalid" },
   });
   assert.equal(bad.display.mode, "rv_top");
   assert.equal(bad.orientation.yaw_offset_deg, -360);
+  assert.equal(bad.orientation.sensor_forward_axis, "x");
 });
 
 test("normalizeConfig keeps valid text_size_mode and falls back for invalid values", () => {
@@ -694,6 +698,17 @@ test("computeMagHeading heading increases when rotating East (0→90°)", () => 
   assert.ok(heading > 30 && heading < 60, `heading=${heading}, expected ≈ 45°`);
 });
 
+test("computeMagHeading supports Y-forward mounting preset", () => {
+  const { computeMagHeading } = loadRuntime().api;
+  // Flat sensor, magnetic field along +X.
+  // X-forward preset => heading ~0° (North), Y-forward preset => heading ~90° (East).
+  const hX = computeMagHeading(50, 0, -40, 0, 0, "x");
+  const hY = computeMagHeading(50, 0, -40, 0, 0, "y");
+  assert.ok(hX !== null && hY !== null);
+  assert.ok((hX < 5 || hX > 355), `hX=${hX}, expected ≈0°`);
+  assert.ok(hY > 85 && hY < 95, `hY=${hY}, expected ≈90°`);
+});
+
 test("computeMagHeading with real sensor data (mag_x=0.879, mag_y=102.148, mag_z=-119.238)", () => {
   const { computeMagHeading } = loadRuntime().api;
   const heading = computeMagHeading(0.879, 102.148, -119.238, 0, 0);
@@ -790,4 +805,58 @@ test("_buildModel falls back to yaw when mag entities not configured", () => {
   assert.equal(model.headingFromMag, false, "heading should NOT come from magnetometer");
   assert.ok(model.yawAvailable, "yaw should be available from gyro");
   assert.ok(Math.abs(model.heading - 90) < 0.01, `heading=${model.heading}, expected 90°`);
+});
+
+test("_buildModel applies sensor_forward_axis preset to magnetometer heading", () => {
+  const runtime = loadRuntime();
+  const CardClass = runtime.registry.get("rv-ha-lovelace-card");
+  const card = new CardClass();
+  card._render = () => {};
+  card.setConfig({ type: "custom:rv-ha-lovelace-card" });
+  card._config = runtime.api.normalizeConfig({
+    type: "custom:rv-ha-lovelace-card",
+    orientation: {
+      sensor_forward_axis: "y",
+    },
+    entities: {
+      pitch: "sensor.pitch",
+      roll: "sensor.roll",
+      mag_x: "sensor.mag_x",
+      mag_y: "sensor.mag_y",
+      mag_z: "sensor.mag_z",
+    },
+  });
+  card._hass = {
+    states: {
+      "sensor.pitch": { state: "0" },
+      "sensor.roll": { state: "0" },
+      "sensor.mag_x": { state: "50" },
+      "sensor.mag_y": { state: "0" },
+      "sensor.mag_z": { state: "-40" },
+    },
+  };
+  const model = card._buildModel();
+  assert.equal(model.headingFromMag, true);
+  assert.ok(model.heading > 85 && model.heading < 95, `heading=${model.heading}, expected ≈90°`);
+});
+
+test("_buildSensorAxesSvg reflects selected forward axis", () => {
+  const runtime = loadRuntime();
+  const CardClass = runtime.registry.get("rv-ha-lovelace-card");
+  const card = new CardClass();
+  card._render = () => {};
+
+  card._config = runtime.api.normalizeConfig({
+    type: "custom:rv-ha-lovelace-card",
+    orientation: { sensor_forward_axis: "y" },
+  });
+  const ySvg = card._buildSensorAxesSvg();
+  assert.ok(ySvg.includes("Y=forward"), "Y-forward SVG aria should be present");
+
+  card._config = runtime.api.normalizeConfig({
+    type: "custom:rv-ha-lovelace-card",
+    orientation: { sensor_forward_axis: "x" },
+  });
+  const xSvg = card._buildSensorAxesSvg();
+  assert.ok(xSvg.includes("X=Pitch (forward)"), "X-forward SVG aria should be present");
 });

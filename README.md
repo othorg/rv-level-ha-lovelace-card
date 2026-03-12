@@ -91,8 +91,11 @@ For reliable leveling values, sensor placement matters more than card settings.
   - near the vehicle centerline
   - preferably close to the geometric center between front/rear axle (or at least not at an extreme corner)
 - Axis alignment:
-  - sensor X axis -> vehicle forward/backward
-  - sensor Y axis -> vehicle left/right
+  - default preset: sensor X axis -> vehicle forward/backward
+  - alternative preset: sensor Y axis -> vehicle forward/backward
+  - configure this via `orientation.sensor_forward_axis` (`x` or `y`)
+  - the X/Y/Z orientation badge follows this setting
+  - sensor Y axis -> vehicle left/right (when `sensor_forward_axis: x`)
   - sensor Z axis -> up/down
 - Mounting quality:
   - avoid loose or flexible parts (furniture panels, thin covers)
@@ -122,7 +125,9 @@ The card supports computing a **tilt-compensated magnetic heading** from magneto
 ### How it works
 
 - When all three magnetometer entities are configured and reporting valid values, the card computes a **tilt-compensated magnetic heading** using pitch/roll from the sensor frame (before any orientation transforms).
-- The heading formula assumes the **WIT-901 default mounting** with **X=forward, Y=left, Z=up**.
+- The heading formula supports both mounting presets:
+  - `sensor_forward_axis: x` -> **X=forward, Y=left, Z=up**
+  - `sensor_forward_axis: y` -> **Y=forward, X=right, Z=up**
 - When the magnetic heading is active, `AngleZ` in the angle panel shows the same heading value (not the gyro yaw), so compass ring and AngleZ stay in sync.
 - If magnetometer entities are not configured or report invalid/unavailable values, the card **falls back to the gyro-based yaw entity** automatically.
 
@@ -132,6 +137,7 @@ The card supports computing a **tilt-compensated magnetic heading** from magneto
 - **Use `yaw_offset_deg` for fine correction.** This offset applies to both magnetometer and gyro heading sources.
 - **The magnetometer vector norm must be ≥ 1 µT.** If the sensor is shielded or uncalibrated (near-zero field), the card rejects the reading and falls back to gyro yaw.
 - **Orientation options `swap_axes`, `invert_pitch`, `invert_roll` do NOT affect the heading calculation.** These options only correct the leveling display. The heading formula uses raw sensor-frame pitch/roll because magnetometer data is also in sensor frame. To correct the heading output, use `invert_yaw` and `yaw_offset_deg`.
+- **If heading is off by ~90°**, verify `sensor_forward_axis` first before applying a `yaw_offset_deg` correction.
 
 ## Installation (HACS)
 
@@ -195,6 +201,7 @@ display:
   show_compass_status: true
   text_size_mode: auto
 orientation:
+  sensor_forward_axis: x
   auto_screen_mapping: false
   swap_axes: false
   invert_pitch: false
