@@ -1,6 +1,6 @@
 const CARD_TYPE = "rv-ha-lovelace-card";
 const CARD_NAME = "RV Level Lovelace Card";
-const CARD_VERSION = "0.4.2";
+const CARD_VERSION = "0.4.3";
 
 const DEFAULT_GEOMETRY = {
   wheelbase_mm: 2000,
@@ -1312,6 +1312,7 @@ class WitHaLovelaceCard extends HTMLElement {
           font-family: Arial, sans-serif;
           z-index: 3;
           text-align: center;
+          line-height: 1.18;
         }
         .angle-display .angle-label {
           display: block;
@@ -1324,18 +1325,22 @@ class WitHaLovelaceCard extends HTMLElement {
           font-size: 18px;
           font-weight: 500;
           font-variant-numeric: tabular-nums;
+          white-space: nowrap;
         }
         .angle-display.angle-x {
-          left: calc(50% + min(28vw, 175px));
+          right: 2%;
+          left: auto;
           top: 50%;
           transform: translateY(-50%);
-          text-align: left;
+          text-align: right;
+          width: min(36%, 170px);
         }
         .angle-display.angle-y {
-          top: calc(50% + min(34vw, 220px));
+          bottom: 2%;
           left: 50%;
-          bottom: auto;
           transform: translateX(-50%);
+          text-align: center;
+          width: min(54%, 260px);
         }
         .rv-top-status {
           margin-top: 6px;

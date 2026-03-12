@@ -9,6 +9,14 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.4.3] - 2026-03-12
+
+### Fixed
+- Corrected `rv_top` X/Y angle block layout regression:
+  - right-side angle block no longer clips at card edge
+  - bottom angle block no longer overlaps with status/content
+  - improved line-height and non-wrapping numeric angle text for stable rendering
+
 ## [0.4.2] - 2026-03-12
 
 ### Changed
