@@ -9,6 +9,14 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.4.7] - 2026-03-13
+
+### Changed
+- `rv_top`: switched leveling point placement to dynamic geometry guides:
+  - horizontal guides are now centered at 50% between the outer mini-compass ring and each card side
+  - vertical guides are now derived from the RV SVG bounds using a `-15%` offset from the top and bottom edges
+- `rv_top`: aligned the right-side angle value block to the same dynamic right guide line and vertically centered between top/bottom guide rows.
+
 ## [0.4.6] - 2026-03-12
 
 ### Changed

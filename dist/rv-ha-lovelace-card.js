@@ -1,6 +1,6 @@
 const CARD_TYPE = "rv-ha-lovelace-card";
 const CARD_NAME = "RV Level Lovelace Card";
-const CARD_VERSION = "0.4.6";
+const CARD_VERSION = "0.4.7";
 
 const DEFAULT_GEOMETRY = {
   wheelbase_mm: 2000,
@@ -1435,12 +1435,18 @@ class WitHaLovelaceCard extends HTMLElement {
     this._nodes = {
       mode: "rv_top",
       wrapper,
+      rvBody: this.shadowRoot.querySelector(".rv-top-body"),
       temp: this.shadowRoot.querySelector(".temp"),
       tempText: this.shadowRoot.querySelector(".temp .head-text"),
       batt: this.shadowRoot.querySelector(".batt"),
       battText: this.shadowRoot.querySelector(".batt .head-text"),
       title: this.shadowRoot.querySelector(".rv-title"),
       rvSvgContainer: this.shadowRoot.querySelector(".rv-svg-container"),
+      miniCompass: this.shadowRoot.querySelector(".mini-compass"),
+      wheelFL: this.shadowRoot.querySelector(".wheel-indicator.fl"),
+      wheelFR: this.shadowRoot.querySelector(".wheel-indicator.fr"),
+      wheelRL: this.shadowRoot.querySelector(".wheel-indicator.rl"),
+      wheelRR: this.shadowRoot.querySelector(".wheel-indicator.rr"),
       wheelDotFL: this.shadowRoot.querySelector(".wheel-indicator.fl .wheel-dot"),
       wheelDotFR: this.shadowRoot.querySelector(".wheel-indicator.fr .wheel-dot"),
       wheelDotRL: this.shadowRoot.querySelector(".wheel-indicator.rl .wheel-dot"),
@@ -1454,6 +1460,7 @@ class WitHaLovelaceCard extends HTMLElement {
       miniCompassIndex: this.shadowRoot.querySelector(".mini-compass-index"),
       miniLevelCircle: this.shadowRoot.querySelector(".mini-level-circle"),
       miniDot: this.shadowRoot.querySelector(".mini-dot"),
+      angleXBlock: this.shadowRoot.querySelector(".angle-display.angle-x"),
       angleXLabel: this.shadowRoot.querySelector(".angle-x .angle-label"),
       angleXValue: this.shadowRoot.querySelector(".angle-x .angle-value"),
       angleYLabel: this.shadowRoot.querySelector(".angle-y .angle-label"),
@@ -2149,6 +2156,7 @@ class WitHaLovelaceCard extends HTMLElement {
     applyWheel(this._nodes.wheelDotFR, this._nodes.wheelValFR, model.corners.fr);
     applyWheel(this._nodes.wheelDotRL, this._nodes.wheelValRL, model.corners.rl);
     applyWheel(this._nodes.wheelDotRR, this._nodes.wheelValRR, model.corners.rr);
+    this._updateRvTopGuideLayout();
 
     this._nodes.miniRingRotor.hidden = !this._config.display.show_compass_ring;
     this._nodes.miniCompassIndex.hidden = !this._config.display.show_compass_ring;
@@ -2195,6 +2203,62 @@ class WitHaLovelaceCard extends HTMLElement {
 
     this._renderRvTopDynamic();
     this._startAnimationLoop();
+  }
+
+  _setRvTopGuidePos(node, xPct, yPct) {
+    if (!node) return;
+    node.style.left = `${xPct}%`;
+    node.style.top = `${yPct}%`;
+    node.style.right = "auto";
+    node.style.bottom = "auto";
+    node.style.transform = "translate(-50%, -50%)";
+  }
+
+  _updateRvTopGuideLayout() {
+    const bodyRect = this._nodes.rvBody?.getBoundingClientRect();
+    const compassRect = this._nodes.miniCompass?.getBoundingClientRect();
+    const svgRect = this._nodes.rvSvgContainer?.getBoundingClientRect();
+    if (!bodyRect || !compassRect || !svgRect || bodyRect.width <= 0 || bodyRect.height <= 0) return;
+
+    const bodyW = bodyRect.width;
+    const bodyH = bodyRect.height;
+    const xMargin = 6;
+    const yMargin = 6;
+
+    const ringLeft = clampNumber(compassRect.left - bodyRect.left, 0, bodyW);
+    const ringRight = clampNumber(compassRect.right - bodyRect.left, 0, bodyW);
+
+    // Horizontal rule:
+    // place guides at 50% of the gap between outer ring edge and card side.
+    const leftX = clampNumber(ringLeft * 0.5, xMargin, bodyW - xMargin);
+    const rightX = clampNumber(ringRight + (bodyW - ringRight) * 0.5, xMargin, bodyW - xMargin);
+
+    const svgTop = clampNumber(svgRect.top - bodyRect.top, 0, bodyH);
+    const svgBottom = clampNumber(svgRect.bottom - bodyRect.top, 0, bodyH);
+    const svgHeight = Math.max(1, svgBottom - svgTop);
+
+    // Vertical rule:
+    // offset from top/bottom SVG edge by -15% of SVG height.
+    let topY = svgTop - svgHeight * 0.15;
+    let bottomY = svgBottom - svgHeight * 0.15;
+    topY = clampNumber(topY, yMargin, bodyH - yMargin);
+    bottomY = clampNumber(bottomY, yMargin, bodyH - yMargin);
+    if (bottomY < topY + 24) bottomY = clampNumber(topY + 24, yMargin, bodyH - yMargin);
+    const middleY = clampNumber((topY + bottomY) * 0.5, yMargin, bodyH - yMargin);
+
+    const leftPct = leftX / bodyW * 100;
+    const rightPct = rightX / bodyW * 100;
+    const topPct = topY / bodyH * 100;
+    const bottomPct = bottomY / bodyH * 100;
+    const middlePct = middleY / bodyH * 100;
+
+    this._setRvTopGuidePos(this._nodes.wheelFL, leftPct, topPct);
+    this._setRvTopGuidePos(this._nodes.wheelFR, rightPct, topPct);
+    this._setRvTopGuidePos(this._nodes.wheelRL, leftPct, bottomPct);
+    this._setRvTopGuidePos(this._nodes.wheelRR, rightPct, bottomPct);
+
+    // Keep right angle value centered on the same right guide line.
+    this._setRvTopGuidePos(this._nodes.angleXBlock, rightPct, middlePct);
   }
 
   _renderRvTopDynamic() {
