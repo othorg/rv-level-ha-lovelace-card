@@ -14,7 +14,7 @@ The card is sensor-source agnostic: it works with any Home Assistant entities th
 
 ## Status
 
-Current release line: `0.3.x` with dual visualization modes and full editor-based configuration.
+Current release line: `0.6.x` with dual visualization modes and full editor-based configuration.
 
 ## Features
 
