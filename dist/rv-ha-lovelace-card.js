@@ -1,6 +1,6 @@
 const CARD_TYPE = "rv-ha-lovelace-card";
 const CARD_NAME = "RV Level Lovelace Card";
-const CARD_VERSION = "0.4.9";
+const CARD_VERSION = "0.6.0";
 
 const DEFAULT_GEOMETRY = {
   wheelbase_mm: 2000,
@@ -691,6 +691,44 @@ function computeRoundDotGeometry(width, display = DEFAULT_DISPLAY) {
   return { dotSizePx, boundaryRadiusPx, dotTrackRadiusPx };
 }
 
+function computeRvTopHorizontalGuidePositions(bodyWidth, ringLeft, ringRight, marginPx = 6) {
+  const leftX = clampNumber(ringLeft * 0.5, marginPx, bodyWidth - marginPx);
+  const rightX = clampNumber(ringRight + (bodyWidth - ringRight) * 0.5, marginPx, bodyWidth - marginPx);
+  return { leftX, rightX };
+}
+
+function computeRvTopVerticalGuidePositions({
+  bodyHeight,
+  svgTopInBody,
+  svgWidth,
+  svgHeight,
+  outlineBounds,
+  marginPx = 6,
+  minGapPx = 24,
+}) {
+  if (svgWidth <= 0 || svgHeight <= 0 || bodyHeight <= 0) {
+    return null;
+  }
+  const vbW = outlineBounds.viewBoxWidth;
+  const vbH = outlineBounds.viewBoxHeight;
+  const scale = Math.min(svgWidth / vbW, svgHeight / vbH);
+  const yPad = (svgHeight - vbH * scale) * 0.5;
+
+  const rvTop = svgTopInBody + yPad + outlineBounds.transformedYMin * scale;
+  const rvBottom = svgTopInBody + yPad + outlineBounds.transformedYMax * scale;
+  const rvHeight = Math.max(1, rvBottom - rvTop);
+
+  let topY = rvTop + rvHeight * 0.15;
+  let bottomY = rvBottom - rvHeight * 0.15;
+  topY = clampNumber(topY, marginPx, bodyHeight - marginPx);
+  bottomY = clampNumber(bottomY, marginPx, bodyHeight - marginPx);
+  if (bottomY < topY + minGapPx) {
+    bottomY = clampNumber(topY + minGapPx, marginPx, bodyHeight - marginPx);
+  }
+  const middleY = clampNumber((topY + bottomY) * 0.5, marginPx, bodyHeight - marginPx);
+  return { topY, bottomY, middleY };
+}
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -826,6 +864,46 @@ class WitHaLovelaceCard extends HTMLElement {
   _displayColor(key, fallback = "transparent") {
     const value = String(this._config?.display?.[key] ?? "").trim();
     return value || fallback;
+  }
+
+  _applyHeadReadouts(tempText, battText, textColor, infoPx) {
+    this._nodes.temp.hidden = !this._config.display.show_temperature;
+    this._nodes.batt.hidden = !this._config.display.show_battery;
+    this._nodes.tempText.textContent = tempText;
+    this._nodes.battText.textContent = battText;
+    this._nodes.temp.style.fontSize = `${infoPx}px`;
+    this._nodes.batt.style.fontSize = `${infoPx}px`;
+    this._nodes.temp.style.color = textColor;
+    this._nodes.batt.style.color = textColor;
+  }
+
+  _applySensorAxesVisibility() {
+    if (!this._nodes.sensorAxes) return;
+    const visible = this._config.display.show_sensor_axes;
+    this._nodes.sensorAxes.hidden = !visible;
+    this._nodes.sensorAxes.style.display = visible ? "block" : "none";
+  }
+
+  _applyLevelVisuals(levelNode, dotNode, crossNodes, colors) {
+    if (!levelNode || !dotNode) return;
+    const {
+      levelHighlightColor,
+      levelStartColor,
+      levelMidColor,
+      levelEndColor,
+      dotColor,
+      dotBorderColor,
+      crosshairColor,
+    } = colors;
+    levelNode.style.background = `
+      radial-gradient(circle at 50% 36%, ${levelHighlightColor}, rgba(255,255,255,0) 35%),
+      radial-gradient(circle at 50% 50%, ${levelStartColor} 0%, ${levelMidColor} 46%, ${levelEndColor} 100%)
+    `;
+    dotNode.style.background = dotColor;
+    dotNode.style.borderColor = dotBorderColor;
+    for (const node of crossNodes || []) {
+      node.style.background = crosshairColor;
+    }
   }
 
   _emitMoreInfo(entityId) {
@@ -1473,6 +1551,7 @@ class WitHaLovelaceCard extends HTMLElement {
       miniRingRotor: this.shadowRoot.querySelector(".mini-ring-rotor"),
       miniCompassIndex: this.shadowRoot.querySelector(".mini-compass-index"),
       miniLevelCircle: this.shadowRoot.querySelector(".mini-level-circle"),
+      miniCrossNodes: [...this.shadowRoot.querySelectorAll(".mini-cross")],
       miniDot: this.shadowRoot.querySelector(".mini-dot"),
       angleXBlock: this.shadowRoot.querySelector(".angle-display.angle-x"),
       angleXLabel: this.shadowRoot.querySelector(".angle-x .angle-label"),
@@ -2056,6 +2135,7 @@ class WitHaLovelaceCard extends HTMLElement {
       ringRotor: this.shadowRoot.querySelector(".ring-rotor"),
       compassIndex: this.shadowRoot.querySelector(".compass-index"),
       levelCircle: this.shadowRoot.querySelector(".level-circle"),
+      crossNodes: [...this.shadowRoot.querySelectorAll(".cross")],
       dot: this.shadowRoot.querySelector(".dot"),
       cornerGrid: this.shadowRoot.querySelector(".corner-grid"),
       cornerFL: this.shadowRoot.querySelector(".corner-fl"),
@@ -2129,18 +2209,8 @@ class WitHaLovelaceCard extends HTMLElement {
     this._nodes.title.style.fontSize = `${titlePx}px`;
     this._nodes.title.style.color = textColor;
 
-    this._nodes.temp.hidden = !this._config.display.show_temperature;
-    this._nodes.batt.hidden = !this._config.display.show_battery;
-    this._nodes.tempText.textContent = model.tempText;
-    this._nodes.battText.textContent = model.battText;
-    this._nodes.temp.style.fontSize = `${infoPx}px`;
-    this._nodes.batt.style.fontSize = `${infoPx}px`;
-    this._nodes.temp.style.color = textColor;
-    this._nodes.batt.style.color = textColor;
-    if (this._nodes.sensorAxes) {
-      this._nodes.sensorAxes.hidden = !this._config.display.show_sensor_axes;
-      this._nodes.sensorAxes.style.display = this._config.display.show_sensor_axes ? "block" : "none";
-    }
+    this._applyHeadReadouts(model.tempText, model.battText, textColor, infoPx);
+    this._applySensorAxesVisibility();
 
     const showCorners = this._config.display.show_corner_values;
     const applyWheel = (dotNode, valNode, corner) => {
@@ -2175,14 +2245,20 @@ class WitHaLovelaceCard extends HTMLElement {
 
     this._nodes.miniRingRotor.hidden = !this._config.display.show_compass_ring;
     this._nodes.miniCompassIndex.hidden = !this._config.display.show_compass_ring;
-    this._nodes.miniLevelCircle.style.background = `
-      radial-gradient(circle at 50% 36%, ${levelHighlightColor}, rgba(255,255,255,0) 35%),
-      radial-gradient(circle at 50% 50%, ${levelStartColor} 0%, ${levelMidColor} 46%, ${levelEndColor} 100%)
-    `;
-    this._nodes.miniDot.style.background = dotColor;
-    this._nodes.miniDot.style.borderColor = dotBorderColor;
-    const miniCrossNodes = this.shadowRoot.querySelectorAll(".mini-cross");
-    for (const node of miniCrossNodes) node.style.background = crosshairColor;
+    this._applyLevelVisuals(
+      this._nodes.miniLevelCircle,
+      this._nodes.miniDot,
+      this._nodes.miniCrossNodes,
+      {
+        levelHighlightColor,
+        levelStartColor,
+        levelMidColor,
+        levelEndColor,
+        dotColor,
+        dotBorderColor,
+        crosshairColor,
+      },
+    );
 
     const showAngles = this._config.display.show_angle_panel;
     this._nodes.angleXLabel.parentElement.hidden = !showAngles;
@@ -2247,32 +2323,21 @@ class WitHaLovelaceCard extends HTMLElement {
 
     // Horizontal rule:
     // place guides at 50% of the gap between outer ring edge and card side.
-    const leftX = clampNumber(ringLeft * 0.5, xMargin, bodyW - xMargin);
-    const rightX = clampNumber(ringRight + (bodyW - ringRight) * 0.5, xMargin, bodyW - xMargin);
+    const { leftX, rightX } = computeRvTopHorizontalGuidePositions(bodyW, ringLeft, ringRight, xMargin);
 
     const svgW = svgRect.width;
     const svgH = svgRect.height;
-    if (svgW <= 0 || svgH <= 0) return;
-
-    // Map the real transformed RV outline bounds from viewBox-space into container pixels.
-    const vbW = RV_TOP_OUTLINE_BOUNDS.viewBoxWidth;
-    const vbH = RV_TOP_OUTLINE_BOUNDS.viewBoxHeight;
-    const scale = Math.min(svgW / vbW, svgH / vbH);
-    const xPad = (svgW - vbW * scale) * 0.5;
-    const yPad = (svgH - vbH * scale) * 0.5;
-
-    const rvTop = svgRect.top - bodyRect.top + yPad + RV_TOP_OUTLINE_BOUNDS.transformedYMin * scale;
-    const rvBottom = svgRect.top - bodyRect.top + yPad + RV_TOP_OUTLINE_BOUNDS.transformedYMax * scale;
-    const rvHeight = Math.max(1, rvBottom - rvTop);
-
-    // Vertical rule:
-    // Use 15% inset from the actual RV SVG outline top/bottom edges.
-    let topY = rvTop + rvHeight * 0.15;
-    let bottomY = rvBottom - rvHeight * 0.15;
-    topY = clampNumber(topY, yMargin, bodyH - yMargin);
-    bottomY = clampNumber(bottomY, yMargin, bodyH - yMargin);
-    if (bottomY < topY + 24) bottomY = clampNumber(topY + 24, yMargin, bodyH - yMargin);
-    const middleY = clampNumber((topY + bottomY) * 0.5, yMargin, bodyH - yMargin);
+    const vertical = computeRvTopVerticalGuidePositions({
+      bodyHeight: bodyH,
+      svgTopInBody: svgRect.top - bodyRect.top,
+      svgWidth: svgW,
+      svgHeight: svgH,
+      outlineBounds: RV_TOP_OUTLINE_BOUNDS,
+      marginPx: yMargin,
+      minGapPx: 24,
+    });
+    if (!vertical) return;
+    const { topY, bottomY, middleY } = vertical;
 
     const leftPct = leftX / bodyW * 100;
     const rightPct = rightX / bodyW * 100;
@@ -2349,18 +2414,13 @@ class WitHaLovelaceCard extends HTMLElement {
     this._nodes.title.hidden = !title;
     this._nodes.title.style.fontSize = `${titlePx}px`;
     this._nodes.title.style.color = textColor;
-    this._nodes.temp.hidden = !this._config.display.show_temperature;
-    this._nodes.batt.hidden = !this._config.display.show_battery;
-    this._nodes.tempText.textContent = this._buildHeadValue(model.tempText);
-    this._nodes.battText.textContent = this._buildHeadValue(model.battText);
-    this._nodes.temp.style.fontSize = `${infoPx}px`;
-    this._nodes.batt.style.fontSize = `${infoPx}px`;
-    this._nodes.temp.style.color = textColor;
-    this._nodes.batt.style.color = textColor;
-    if (this._nodes.sensorAxes) {
-      this._nodes.sensorAxes.hidden = !this._config.display.show_sensor_axes;
-      this._nodes.sensorAxes.style.display = this._config.display.show_sensor_axes ? "block" : "none";
-    }
+    this._applyHeadReadouts(
+      this._buildHeadValue(model.tempText),
+      this._buildHeadValue(model.battText),
+      textColor,
+      infoPx,
+    );
+    this._applySensorAxesVisibility();
     this._nodes.ringRotor.hidden = !this._config.display.show_compass_ring;
     this._nodes.compassIndex.hidden = !this._config.display.show_compass_ring;
     const roundBgUrl = String(this._config.image || "").trim();
@@ -2415,15 +2475,20 @@ class WitHaLovelaceCard extends HTMLElement {
     this._nodes.angleZLabel.style.color = textColor;
     this._nodes.valuePanel.hidden = !this._config.display.show_angle_panel;
 
-    this._nodes.levelCircle.style.background = `
-      radial-gradient(circle at 50% 36%, ${levelHighlightColor}, rgba(255,255,255,0) 35%),
-      radial-gradient(circle at 50% 50%, ${levelStartColor} 0%, ${levelMidColor} 46%, ${levelEndColor} 100%)
-    `;
-    this._nodes.dot.style.background = dotColor;
-    this._nodes.dot.style.borderColor = dotBorderColor;
-
-    const crossNodes = this.shadowRoot.querySelectorAll(".cross");
-    for (const node of crossNodes) node.style.background = crosshairColor;
+    this._applyLevelVisuals(
+      this._nodes.levelCircle,
+      this._nodes.dot,
+      this._nodes.crossNodes,
+      {
+        levelHighlightColor,
+        levelStartColor,
+        levelMidColor,
+        levelEndColor,
+        dotColor,
+        dotBorderColor,
+        crosshairColor,
+      },
+    );
 
     const applyCornerCell = (cellNode, corner) => {
       if (!cellNode) return;

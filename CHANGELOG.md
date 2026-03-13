@@ -9,6 +9,15 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.6.0] - 2026-03-13
+
+### Changed
+- Phase 1 refactoring applied without architecture split:
+  - extracted reusable helper methods for shared card UI updates (`_applyHeadReadouts`, `_applySensorAxesVisibility`, `_applyLevelVisuals`)
+  - extracted pure guide-calculation helpers for `rv_top` marker layout (`computeRvTopHorizontalGuidePositions`, `computeRvTopVerticalGuidePositions`)
+  - reduced repeated DOM queries by caching crosshair node lists in both views
+  - wired `rv_top` guide layout to the new helper functions for clearer, test-stable update logic.
+
 ## [0.4.9] - 2026-03-13
 
 ### Fixed
