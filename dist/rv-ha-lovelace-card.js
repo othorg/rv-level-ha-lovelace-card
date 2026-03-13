@@ -1,6 +1,6 @@
 const CARD_TYPE = "rv-ha-lovelace-card";
 const CARD_NAME = "RV Level Lovelace Card";
-const CARD_VERSION = "0.6.0";
+const CARD_VERSION = "0.6.1";
 
 const DEFAULT_GEOMETRY = {
   wheelbase_mm: 2000,

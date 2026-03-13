@@ -9,6 +9,13 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.6.1] - 2026-03-13
+
+### Changed
+- Updated README preview screenshots:
+  - `assets/rv_compass_example.png`
+  - `assets/rv_top_example.png`
+
 ## [0.6.0] - 2026-03-13
 
 ### Changed
