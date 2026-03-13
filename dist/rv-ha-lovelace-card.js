@@ -1,6 +1,6 @@
 const CARD_TYPE = "rv-ha-lovelace-card";
 const CARD_NAME = "RV Level Lovelace Card";
-const CARD_VERSION = "0.4.7";
+const CARD_VERSION = "0.4.8";
 
 const DEFAULT_GEOMETRY = {
   wheelbase_mm: 2000,
@@ -259,6 +259,17 @@ const TEXT_SIZE_MODE_FACTORS = {
 const MAX_LEVELING_TILT_DEG = 30;
 const ROUND_CENTER_X_RATIO = 0.5;
 const ROUND_CENTER_Y_RATIO = 0.5;
+const RV_TOP_OUTLINE_BOUNDS = Object.freeze({
+  // Bounds of the outer shell path in _buildRvTopSvg() after the group transform:
+  // <g transform="translate(50 75) scale(1.16) translate(-50 -75)">
+  // Raw outline: x=[31..69], y=[13..136] in viewBox 100x150.
+  viewBoxWidth: 100,
+  viewBoxHeight: 150,
+  transformedXMin: 27.96,
+  transformedXMax: 72.04,
+  transformedYMin: 3.08,
+  transformedYMax: 145.76,
+});
 
 function detectScriptBasePath() {
   if (typeof document === "undefined") return "";
@@ -2218,7 +2229,9 @@ class WitHaLovelaceCard extends HTMLElement {
     const bodyRect = this._nodes.rvBody?.getBoundingClientRect();
     const compassRect = this._nodes.miniCompass?.getBoundingClientRect();
     const svgRect = this._nodes.rvSvgContainer?.getBoundingClientRect();
-    if (!bodyRect || !compassRect || !svgRect || bodyRect.width <= 0 || bodyRect.height <= 0) return;
+    if (!bodyRect || !compassRect || !svgRect || bodyRect.width <= 0 || bodyRect.height <= 0) {
+      return;
+    }
 
     const bodyW = bodyRect.width;
     const bodyH = bodyRect.height;
@@ -2233,14 +2246,25 @@ class WitHaLovelaceCard extends HTMLElement {
     const leftX = clampNumber(ringLeft * 0.5, xMargin, bodyW - xMargin);
     const rightX = clampNumber(ringRight + (bodyW - ringRight) * 0.5, xMargin, bodyW - xMargin);
 
-    const svgTop = clampNumber(svgRect.top - bodyRect.top, 0, bodyH);
-    const svgBottom = clampNumber(svgRect.bottom - bodyRect.top, 0, bodyH);
-    const svgHeight = Math.max(1, svgBottom - svgTop);
+    const svgW = svgRect.width;
+    const svgH = svgRect.height;
+    if (svgW <= 0 || svgH <= 0) return;
+
+    // Map the real transformed RV outline bounds from viewBox-space into container pixels.
+    const vbW = RV_TOP_OUTLINE_BOUNDS.viewBoxWidth;
+    const vbH = RV_TOP_OUTLINE_BOUNDS.viewBoxHeight;
+    const scale = Math.min(svgW / vbW, svgH / vbH);
+    const xPad = (svgW - vbW * scale) * 0.5;
+    const yPad = (svgH - vbH * scale) * 0.5;
+
+    const rvTop = svgRect.top - bodyRect.top + yPad + RV_TOP_OUTLINE_BOUNDS.transformedYMin * scale;
+    const rvBottom = svgRect.top - bodyRect.top + yPad + RV_TOP_OUTLINE_BOUNDS.transformedYMax * scale;
+    const rvHeight = Math.max(1, rvBottom - rvTop);
 
     // Vertical rule:
-    // offset from top/bottom SVG edge by -15% of SVG height.
-    let topY = svgTop - svgHeight * 0.15;
-    let bottomY = svgBottom - svgHeight * 0.15;
+    // Use 15% inset from the actual RV SVG outline top/bottom edges.
+    let topY = rvTop + rvHeight * 0.15;
+    let bottomY = rvBottom - rvHeight * 0.15;
     topY = clampNumber(topY, yMargin, bodyH - yMargin);
     bottomY = clampNumber(bottomY, yMargin, bodyH - yMargin);
     if (bottomY < topY + 24) bottomY = clampNumber(topY + 24, yMargin, bodyH - yMargin);

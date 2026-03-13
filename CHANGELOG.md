@@ -9,6 +9,14 @@ All notable changes to this project are documented in this file and in GitHub Re
 ### Changed
 - No changes yet.
 
+## [0.4.8] - 2026-03-13
+
+### Fixed
+- `rv_top` leveling guide placement refined:
+  - vertical guide positions now use the real transformed WoMo outline bounds inside the SVG (instead of the outer SVG container)
+  - top/bottom marker rows now use a stable 15% inset relative to the actual WoMo height
+  - horizontal guide rows remain dynamically centered between the mini-compass ring and card side.
+
 ## [0.4.7] - 2026-03-13
 
 ### Changed
